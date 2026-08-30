@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鏡界 LensMatch - 專業攝影師接案平台 | 攝影媒合與作品集展示</title>
+    
+    <meta name="description" content="鏡界 LensMatch 是台灣專業的攝影媒合與雲端同步平台。提供商業攝影、活動紀錄、婚禮紀錄、人像寫真與短影音剪輯等案源，協助攝影師與案主快速對接，建立透明口碑排行榜。">
+    <meta name="keywords" content="攝影接案,攝影師媒合,商業攝影,活動紀錄,婚禮紀錄,人像寫真,短影音剪輯,找攝影師,鏡界,LensMatch">
+    <meta name="author" content="鏡界 LensMatch 團隊">
+    
+    <meta property="og:title" content="鏡界 LensMatch - 專業攝影師接案平台">
+    <meta property="og:description" content="專業攝影媒合與雲端同步平台，尋找優質攝影師或發布拍攝案件首選。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://xxxxmultiple.github.io/X/cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init("Nic3c4Gw6B9aGCu7t");
+        })();
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-gray-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wider cursor-pointer">📷 鏡界 LensMatch</h1>
+            <div class="flex items-center gap-4">
+                <div class="text-xs text-gray-400 hidden sm:block">
+                    專業攝影媒合與雲端同步平台
+                </div>
+                <button onclick="openSupportEmail()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1 cursor-pointer">
+                    💬 客服中心
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <aside class="md:col-span-1 space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit sticky top-20">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">🔐 會員中心</h2>
+                
+                <div id="login-section">
+                    <p class="text-xs text-gray-500 mb-3">首次登入請輸入稱呼與密碼註冊；之後只需輸入 Email 與密碼即可！</p>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">登入帳號 (請輸入 Email) <span class="text-red-500">*</span></label>
+                            <input type="email" id="login-email" placeholder="your@email.com" onblur="checkUserExist()" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+                        </div>
+                        
+                        <div id="name-field-container" class="hidden">
+                            <label class="block text-xs font-semibold text-amber-600 mb-1">✨ 偵測為新帳號，請輸入團隊名稱/稱呼 <span class="text-red-500">*</span></label>
+                            <input type="text" id="login-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-amber-300 bg-amber-50/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">密碼 <span class="text-red-500">*</span></label>
+                            <input type="password" id="login-password" placeholder="請輸入密碼" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1 text-xs">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="remember-me" class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-800 cursor-pointer">
+                                <label for="remember-me" class="text-gray-600 cursor-pointer select-none">記住帳號密碼</label>
+                            </div>
+                            <button onclick="openForgotPasswordModal()" class="text-amber-600 hover:underline font-semibold cursor-pointer">忘記密碼？</button>
+                        </div>
+
+                        <button onclick="handleLoginOrRegister()" id="auth-btn" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-sm font-medium transition mt-1 cursor-pointer">
+                            登入 / 註冊
+                        </button>
+                    </div>
+                </div>
+
+                <div id="user-info-section" class="hidden space-y-4">
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <p class="text-xs text-green-600 font-semibold mb-1">✅ 已登入會員</p>
+                        <p id="user-display-name" class="text-sm font-bold text-gray-900"></p>
+                        <p id="user-display-email" class="text-xs text-gray-500 truncate"></p>
+                    </div>
+
+                    <button onclick="openPostModal()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg text-sm font-bold transition shadow-sm cursor-pointer">
+                        📝 我要發佈新案件
+                    </button>
+
+                    <button onclick="openEditProfileModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 cursor-pointer">
+                        ⚙️ 修改資料與密碼
+                    </button>
+
+                    <button onclick="handleLogout()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-sm font-medium transition border border-red-200 cursor-pointer">
+                        登出帳號
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-base font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100">
+                    <span>✍️ 給予接案者評價</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-3">與團隊合作過嗎？留下評價協助建立口碑！</p>
+                <button onclick="openRatingModal()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-bold transition cursor-pointer">
+                    撰寫合作評價 🌟
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-base font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 flex items-center justify-between">
+                    <span>🏆 接案口碑排行榜</span>
+                    <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Top 20</span>
+                </h3>
+                <p class="text-[11px] text-gray-400 mb-3">💡 點擊下方名單可查看詳細檔案與評價</p>
+                <div id="ranking-container" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+                    <p class="text-xs text-gray-400 text-center py-4">載入排行榜中...</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="md:col-span-3 space-y-4">
+            <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+                <h2 class="text-2xl font-bold text-gray-900">📋 最新拍攝案件大廳</h2>
+                <span id="hall-status-tip" class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">請先登入以解鎖接案按鈕</span>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-2 items-center">
+                <span class="text-xs font-bold text-gray-500 mr-1">🔍 類別篩選：</span>
+                <button onclick="filterCategory('全部', this)" class="filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">全部案件</button>
+                <button onclick="filterCategory('商業攝影', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">商業攝影</button>
+                <button onclick="filterCategory('活動紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">活動紀錄</button>
+                <button onclick="filterCategory('婚禮紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">婚禮紀錄</button>
+                <button onclick="filterCategory('人像寫真', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">人像寫真</button>
+                <button onclick="filterCategory('自媒體', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">自媒體</button>
+                <button onclick="filterCategory('找剪輯', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">找剪輯</button>
+                <button onclick="filterCategory('短影音', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">短影音</button>
+            </div>
+
+            <div id="projects-container" class="space-y-4">
+                <p class="text-sm text-gray-500 text-center py-6">正在從雲端載入最新案件...</p>
+            </div>
+        </main>
+    </div>
+
+    <div id="registerProfileModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeRegisterProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">✨ 歡迎加入鏡界！請填寫您的工作室檔案</h3>
+            <p class="text-xs text-gray-500 mb-4">這些資訊將展示在排行榜與您的專屬檔案頁面中，方便案主認識您！</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">主打服務項目 + 個人介紹</label>
+                    <textarea id="reg-services" rows="3" placeholder="例如：專注於商業攝影與婚禮紀錄，擁有5年拍攝經驗..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">作品集連結(Google雲端) or其他連結</label>
+                    <input type="url" id="reg-portfolio" placeholder="https://drive.google.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Instagram (IG) 帳號或連結</label>
+                        <input type="text" id="reg-ig" placeholder="例如：username 或完整網址" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Facebook (FB) 連結</label>
+                        <input type="url" id="reg-fb" placeholder="https://facebook.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-2 pt-2 border-t border-gray-100">
+                    <input type="checkbox" id="reg-agree-disclaimer" checked class="w-4 h-4 mt-0.5 text-amber-600 border-gray-300 rounded focus:ring-amber-500 cursor-pointer">
+                    <label for="reg-agree-disclaimer" class="text-xs text-gray-600 select-none">
+                        我已閱讀並同意遵守 <button type="button" onclick="openDisclaimerModal()" class="text-amber-600 font-semibold underline cursor-pointer">《服務條款與免責聲明》</button>
+                    </label>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeRegisterProfileModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition shadow-sm cursor-pointer text-xs">
+                        🔙 返回取消
+                    </button>
+                    <button onclick="submitRegisterProfile()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md cursor-pointer">
+                        儲存檔案並進入平台 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editProfileModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeEditProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">⚙️ 修改會員與工作室資料</h3>
+            <p class="text-xs text-gray-500 mb-4">隨時更新您的團隊資訊與密碼維護帳號安全。</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">團隊名稱 / 攝影師稱呼 <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">主打服務項目 + 個人介紹</label>
+                    <textarea id="edit-services" rows="3" placeholder="例如：專注於商業攝影與婚禮紀錄..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">作品集連結(Google雲端) or其他連結</label>
+                    <input type="url" id="edit-portfolio" placeholder="https://drive.google.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Instagram (IG) 帳號或連結</label>
+                        <input type="text" id="edit-ig" placeholder="例如：username 或完整網址" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Facebook (FB) 連結</label>
+                        <input type="url" id="edit-fb" placeholder="https://facebook.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div class="pt-2 border-t border-gray-100">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">變更密碼 (若不需更改密碼請保持空白)</label>
+                    <input type="password" id="edit-new-password" placeholder="輸入新密碼" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeEditProfileModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="submitEditProfile()" class="w-2/3 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm cursor-pointer">
+                        儲存變更 💾
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="postModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl">
+            <button onclick="closePostModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">📝 發佈新的拍攝案件</h3>
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">案件標題</label>
+                    <input type="text" id="post-title" placeholder="例如：餐廳美食拍攝" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別</label>
+                        <select id="post-category" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                            <option value="商業攝影">商業攝影</option>
+                            <option value="活動紀錄">活動紀錄</option>
+                            <option value="婚禮紀錄">婚禮紀錄</option>
+                            <option value="人像寫真">人像寫真</option>
+                            <option value="自媒體">自媒體</option>
+                            <option value="找剪輯">找剪輯</option>
+                            <option value="短影音">短影音</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$)</label>
+                        <input type="text" id="post-budget" placeholder="5,000 - 8,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">詳細說明與要求</label>
+                    <textarea id="post-desc" rows="3" placeholder="請簡述拍攝需求與地點..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closePostModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="submitNewProject()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md cursor-pointer">
+                        確認發布至雲端 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ratingModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-xl">
+            <button onclick="closeRatingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">⭐ 給予接案者合作評價</h3>
+            <p class="text-xs text-gray-500 mb-4">輸入對方的 Email，並選擇預設的評價內容！</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">接案者 Email <span class="text-red-500">*</span></label>
+                    <input type="email" id="rating-target-email" placeholder="freelancer@example.com" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">評分星等</label>
+                    <div id="star-container" class="flex gap-2 text-2xl cursor-pointer">
+                        <span onclick="setRating(1)" class="star text-amber-400">★</span>
+                        <span onclick="setRating(2)" class="star text-amber-400">★</span>
+                        <span onclick="setRating(3)" class="star text-amber-400">★</span>
+                        <span onclick="setRating(4)" class="star text-amber-400">★</span>
+                        <span onclick="setRating(5)" class="star text-amber-400">★</span>
+                    </div>
+                    <input type="hidden" id="selected-rating" value="5">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">評價內容 (請選擇)</label>
+                    <select id="rating-comment-select" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                        <option value="效率快速">⚡ 效率快速</option>
+                        <option value="作品很滿意" selected>🎨 作品很滿意</option>
+                        <option value="專業團隊">🏆 專業團隊</option>
+                        <option value="服務一般">👍 服務一般</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeRatingModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="submitRating()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm cursor-pointer">
+                        送出評價 🌟
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="forgotPasswordModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-xl">
+            <button onclick="closeForgotPasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">🔑 忘記密碼 (自動寄信)</h3>
+            <p class="text-xs text-gray-500 mb-4">請輸入您的註冊 Email，系統將自動產生新密碼並發送至您的信箱！</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">您的註冊信箱 (Email) <span class="text-red-500">*</span></label>
+                    <input type="email" id="forgot-email" placeholder="your@email.com" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeForgotPasswordModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="submitResetPasswordWithEmailJS()" id="forgot-btn" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                        ✉️ 發送重設密碼信
+                    </button>
+                </div>
+                <p class="text-[11px] text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200 mt-2 leading-relaxed">
+                    💡 <b>貼心提醒：</b>若長時間未收到信件，請記得檢查您的<b>垃圾郵件（Spam）</b>或<b>促銷內容</b>分頁！
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="disclaimerModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[85vh] flex flex-col">
+            <button onclick="closeDisclaimerModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">📜 服務條款與免責聲明</h3>
+            <div class="space-y-3 text-xs text-gray-600 overflow-y-auto flex-grow pr-1 leading-relaxed">
+                <p>歡迎使用「鏡界 LensMatch」（以下簡稱本平台）。當您註冊、登入或使用本平台之各項服務時，即表示您已閱讀、瞭解並同意接受本服務條款與免責聲明之所有內容：</p>
+                
+                <p><strong>一、平台定位與免責聲明</strong><br>
+                1. 本平台僅提供攝影師、團隊與案主之間之資訊交流與案件媒合服務。本平台並非任何交易之當事人，亦未介入雙方之合約簽訂、履約過程及金流往來。<br>
+                2. 用戶間因合作所產生之任何糾紛（如拍攝品質、交件延遲、報酬給付等），應由雙方自行協商解決，本平台不負任何法律與連帶賠償責任。</p>
+
+                <p><strong>二、用戶內容與真實性</strong><br>
+                1. 平台上發布之案件內容、攝影師個人檔案、作品集連結、社交媒體及合作評價，均由用戶自行登錄與維護。<br>
+                2. 本平台不保證所有資訊之完全真實性與正確性，使用者在進行線上或線下交易時，應自行評估風險並進行查證。</p>
+
+                <p><strong>三、系統服務與中斷</strong><br>
+                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫、電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
+
+                <p><strong>四、帳號安全與隱私</strong><br>
+                使用者有義務妥善保管自身之帳號與密碼。建議切勿使用與其他重要金融帳號相同之密碼，以維護帳號安全。</p>
+            </div>
+            <button onclick="closeDisclaimerModal()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm mt-4 text-xs cursor-pointer">
+                關閉
+            </button>
+        </div>
+    </div>
+
+    <div id="registerDisclaimerModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">📜 服務條款與免責聲明</h3>
+            <div class="space-y-3 text-xs text-gray-600 overflow-y-auto flex-grow pr-1 leading-relaxed border-b border-gray-100 pb-3">
+                <p>歡迎使用「鏡界 LensMatch」（以下簡稱本平台）。當您註冊、登入或使用本平台之各項服務時，即表示您已閱讀、瞭解並同意接受本服務條款與免責聲明之所有內容：</p>
+                
+                <p><strong>一、平台定位與免責聲明</strong><br>
+                1. 本平台僅提供攝影師、團隊與案主之間之資訊交流與案件媒合服務。本平台並非任何交易之當事人，亦未介入雙方之合約簽訂、履約過程及金流往來。<br>
+                2. 用戶間因合作所產生之任何糾紛（如拍攝品質、交件延遲、報酬給付等），應由雙方自行協商解決，本平台不負任何法律與連帶賠償責任。</p>
+
+                <p><strong>二、用戶內容與真實性</strong><br>
+                1. 平台上發布之案件內容、攝影師個人檔案、作品集連結、社交媒體及合作評價，均由用戶自行登錄與維護。<br>
+                2. 本平台不保證所有資訊之完全真實性與正確性，使用者在進行線上或線下交易時，應自行評估風險並進行查證。</p>
+
+                <p><strong>三、系統服務與中斷</strong><br>
+                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫、電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
+
+                <p><strong>四、帳號安全與隱私</strong><br>
+                使用者有義務妥善保管自身之帳號與密碼。建議切勿使用與其他重要金融帳號相同之密碼，以維護帳號安全。</p>
+            </div>
+            
+            <div class="pt-4 flex gap-2">
+                <button onclick="closeRegisterDisclaimerModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer">
+                    🔙 返回
+                </button>
+                <button onclick="acceptDisclaimerAndOpenProfile()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md text-xs cursor-pointer">
+                    我了解並同意
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[85vh] flex flex-col">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">👤 攝影師 / 團隊專屬檔案</h3>
+            <p id="detail-modal-subtitle" class="text-xs text-amber-600 font-bold mb-3 pb-2 border-b border-gray-100"></p>
+            
+            <div id="freelancer-profile-card" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4 space-y-2 text-xs">
+                <p><strong>🎯 服務項目與個人介紹：</strong></p>
+                <p id="profile-services" class="text-gray-700 font-medium whitespace-pre-line bg-white p-3 rounded-lg border border-amber-100">未填寫</p>
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <a id="profile-portfolio" href="#" target="_blank" class="hidden bg-gray-900 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-gray-800 transition">📂 作品集連結</a>
+                    <a id="profile-ig" href="#" target="_blank" class="hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition">📸 Instagram</a>
+                    <a id="profile-fb" href="#" target="_blank" class="hidden bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition">📘 Facebook</a>
+                </div>
+            </div>
+
+            <h4 class="text-sm font-bold text-gray-900 mb-2">⭐ 案主合作評價紀錄</h4>
+            <div id="detail-reviews-list" class="space-y-3 overflow-y-auto flex-grow pr-1"></div>
+        </div>
+    </div>
+
+    <div id="deviceNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span>📱 寄信方式選擇</span>
+            </h3>
+            <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 leading-relaxed space-y-2">
+                <p><b>手機版用戶：</b>由於手機系統限制，請點擊下方<b>「一鍵複製」</b>將應徵內文複製下來，然後自行前往手機的 Gmail / 郵件 App 貼上發送！</p>
+                <p><b>電腦版用戶：</b>請直接點擊<b>「繼續前往 Gmail 寄信」</b>，系統將自動為您代入所有內文。</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">應徵內文預覽 (可點擊下方按鈕複製)</label>
+                <textarea id="notice-preview-text" rows="5" readonly class="w-full text-xs bg-gray-50 p-2.5 border border-gray-200 rounded-lg font-mono text-gray-700 select-all"></textarea>
+            </div>
+
+            <input type="hidden" id="notice-target-email">
+
+            <div class="space-y-2 pt-1">
+                <button onclick="copyNoticeTextOnly()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
+                    📋 一鍵複製內文 (手機版專用)
+                </button>
+                <button onclick="proceedGmailOpen()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
+                    💻 繼續前往 Gmail 寄信 (電腦版專用)
+                </button>
+                <button onclick="closeDeviceNoticeModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-xl font-semibold transition text-xs cursor-pointer">
+                    🔙 返回
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customAlertModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                ⚠️
+            </div>
+            <div>
+                <h3 id="custom-alert-title" class="text-lg font-bold text-gray-900 mb-1">系統提示</h3>
+                <p id="custom-alert-message" class="text-xs text-gray-600 leading-relaxed whitespace-pre-line"></p>
+            </div>
+            <button onclick="closeCustomAlert()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition text-xs cursor-pointer shadow-md">
+                我知道了
+            </button>
+        </div>
+    </div>
+
+    <div id="applyModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl">
+            <button onclick="closeApplyModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            
+            <h3 class="text-xl font-bold text-gray-900 mb-1">🎯 填寫接案基本資料</h3>
+            <p id="apply-modal-subtitle" class="text-xs text-amber-600 font-bold mb-4"></p>
+            
+            <input type="hidden" id="target-title">
+            <input type="hidden" id="target-budget">
+            <input type="hidden" id="target-desc">
+            <input type="hidden" id="target-email">
+
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">發案者真實聯絡信箱 (已解鎖)</label>
+                    <input type="text" id="display-target-email" readonly class="w-full text-sm bg-gray-50 px-3 py-2 border border-gray-200 rounded-lg text-gray-600 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">攝影師姓名 / 團隊名稱 <span class="text-red-500">*</span></label>
+                    <input type="text" id="apply-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">LINE ID 或電話號碼 <span class="text-red-500">*</span></label>
+                    <input type="text" id="apply-contact" placeholder="例如：line_id_123 或 0912345678" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-gray-600">作品集連結(Google雲端) or其他連結 <span class="text-red-500">*</span></label>
+                        <select id="quick-fill-select" onchange="applyQuickFillPortfolio(this)" class="text-[11px] bg-amber-50 text-amber-800 border border-amber-300 rounded px-2 py-0.5 font-medium cursor-pointer focus:outline-none">
+                            <option value="">⚡ 快速帶入</option>
+                            <option value="all">📂 一次帶入</option>
+                        </select>
+                    </div>
+                    <textarea id="apply-portfolio" rows="2" placeholder="https://drive.google.com/...&#10;IG: https://instagram.com/...&#10;FB: https://facebook.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">簡短自介 / 報價備註</label>
+                    <textarea id="apply-message" rows="3" placeholder="例如：有 3 年商業攝影經驗..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="showDeviceNoticeModal()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        📋 複製資料並前往 Gmail 寄信
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto py-4 text-center text-xs text-gray-500 space-y-1">
+        <p>© 2026 鏡界 LensMatch. All rights reserved. 專業攝影師接案平台。</p>
+        <p>
+            <button onclick="openDisclaimerModal()" class="text-gray-400 hover:text-amber-600 underline cursor-pointer transition">
+                📜 服務條款與免責聲明
+            </button>
+        </p>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://ckiwfgcpueaunlevvzqc.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_wW_q8gdcjUFR--HrJHGUkA_dFdnUR9z';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let isLoggedIn = false;
+        let currentUserEmail = "";
+        let currentUserName = "";
+        let allProjects = [];
+        let currentCategory = '全部';
+        let freelancerMap = {}; 
+        let globalratingsData = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchProjects();
+            fetchRatingsAndRanking();
+            
+            const savedEmail = localStorage.getItem('lensmatch_saved_email');
+            const savedPass = localStorage.getItem('lensmatch_saved_pass');
+            if (savedEmail && savedPass) {
+                document.getElementById('login-email').value = savedEmail;
+                document.getElementById('login-password').value = savedPass;
+                document.getElementById('remember-me').checked = true;
+                checkUserExist();
+            }
+        });
+
+        // 🚨 手機友善的自定義警告視窗取代 alert
+        function showCustomAlert(message, title = "系統提示") {
+            document.getElementById('custom-alert-title').innerText = title;
+            document.getElementById('custom-alert-message').innerText = message;
+            document.getElementById('customAlertModal').classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('customAlertModal').classList.add('hidden');
+        }
+
+        // 📜 開啟與關閉免責聲明彈窗
+        function openDisclaimerModal() {
+            document.getElementById('disclaimerModal').classList.remove('hidden');
+        }
+        function closeDisclaimerModal() {
+            document.getElementById('disclaimerModal').classList.add('hidden');
+        }
+
+        function closeRegisterDisclaimerModal() {
+            document.getElementById('registerDisclaimerModal').classList.add('hidden');
+        }
+
+        function closeRegisterProfileModal() {
+            document.getElementById('registerProfileModal').classList.add('hidden');
+        }
+
+        // 💬 開啟客服中心 Gmail 寄信視窗
+        function openSupportEmail() {
+            const supportEmail = "nobodyknows1015@gmail.com";
+            const subject = "【鏡界平台客服詢問】";
+            const body = "您好，我想詢問關於鏡界平台的問題：\n\n";
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(supportEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(gmailUrl, '_blank');
+        }
+
+        async function checkUserExist() {
+            const emailInput = document.getElementById('login-email').value.trim();
+            const nameContainer = document.getElementById('name-field-container');
+            const authBtn = document.getElementById('auth-btn');
+
+            if (!emailInput || !emailInput.includes('@')) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('email', emailInput)
+                    .maybeSingle();
+
+                if (data) {
+                    nameContainer.classList.add('hidden');
+                    authBtn.innerText = "登入帳號";
+                } else {
+                    nameContainer.classList.remove('hidden');
+                    authBtn.innerText = "註冊並登入";
+                }
+            } catch (err) {
+                console.error("檢查使用者失敗:", err);
+            }
+        }
+
+        async function handleLoginOrRegister() {
+            const emailInput = document.getElementById('login-email').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+            const nameInput = document.getElementById('login-name').value.trim();
+            const nameContainer = document.getElementById('name-field-container');
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            if(!emailInput || !emailInput.includes('@')) {
+                showCustomAlert('請輸入有效的電子郵件！', '格式錯誤');
+                return;
+            }
+            if(!passwordInput) {
+                showCustomAlert('請輸入密碼！', '欄位空白');
+                return;
+            }
+
+            try {
+                const { data: existingUser, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('email', emailInput)
+                    .maybeSingle();
+
+                if (existingUser) {
+                    if (existingUser.password !== passwordInput) {
+                        showCustomAlert('❌ 密碼錯誤，請重新輸入！', '登入失敗');
+                        return;
+                    }
+                    currentUserEmail = existingUser.email;
+                    currentUserName = existingUser.name;
+
+                    proceedLoginSuccess(rememberMe, passwordInput);
+                } else {
+                    if (!nameInput) {
+                        showCustomAlert('偵測為新帳號，請務必填寫「團隊名稱 / 攝影師稱呼」來完成註冊！', '資料未填');
+                        nameContainer.classList.remove('hidden');
+                        return;
+                    }
+
+                    document.getElementById('registerDisclaimerModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                showCustomAlert('登入過程發生錯誤，請檢查網路連線。', '系統錯誤');
+                console.error(err);
+            }
+        }
+
+        function acceptDisclaimerAndOpenProfile() {
+            document.getElementById('registerDisclaimerModal').classList.add('hidden');
+            document.getElementById('registerProfileModal').classList.remove('hidden');
+        }
+
+        async function submitRegisterProfile() {
+            const emailInput = document.getElementById('login-email').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+            const nameInput = document.getElementById('login-name').value.trim();
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            let services = document.getElementById('reg-services').value.trim();
+            const portfolio = document.getElementById('reg-portfolio').value.trim();
+            let ig = document.getElementById('reg-ig').value.trim();
+            const fb = document.getElementById('reg-fb').value.trim();
+
+            if (ig && !ig.startsWith('http://') && !ig.startsWith('https://')) {
+                const cleanIg = ig.replace('@', '').trim();
+                ig = `https://instagram.com/${cleanIg}`;
+            }
+
+            const { error: insertError } = await supabaseClient
+                .from('users')
+                .insert([{ 
+                    email: emailInput, 
+                    name: nameInput, 
+                    password: passwordInput,
+                    services: services,
+                    portfolio: portfolio,
+                    ig: ig,
+                    fb: fb
+                }]);
+
+            if (insertError) {
+                showCustomAlert('註冊失敗：' + insertError.message, '註冊錯誤');
+                return;
+            }
+
+            currentUserEmail = emailInput;
+            currentUserName = nameInput;
+            document.getElementById('registerProfileModal').classList.add('hidden');
+            
+            showCustomAlert('🎉 帳號註冊成功並已建立工作室檔案！', '歡迎加入');
+
+            proceedLoginSuccess(rememberMe, passwordInput);
+        }
+
+        function proceedLoginSuccess(rememberMe, passwordInput) {
+            if (rememberMe) {
+                localStorage.setItem('lensmatch_saved_email', currentUserEmail);
+                localStorage.setItem('lensmatch_saved_pass', passwordInput);
+            } else {
+                localStorage.removeItem('lensmatch_saved_email');
+                localStorage.removeItem('lensmatch_saved_pass');
+            }
+
+            isLoggedIn = true;
+
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('user-info-section').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = currentUserName;
+            document.getElementById('user-display-email').innerText = currentUserEmail;
+            document.getElementById('hall-status-tip').innerText = "已解鎖完整應徵權限";
+            document.getElementById('hall-status-tip').className = "text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold";
+
+            document.getElementById('apply-name').value = currentUserName;
+            renderProjects();
+            fetchRatingsAndRanking();
+
+            openRandomShopeeLink();
+        }
+
+        // ⚙️ 開啟修改資料與密碼彈窗
+        async function openEditProfileModal() {
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('email', currentUserEmail)
+                .single();
+
+            if (user) {
+                document.getElementById('edit-name').value = user.name || '';
+                document.getElementById('edit-services').value = user.services || '';
+                document.getElementById('edit-portfolio').value = user.portfolio || '';
+                document.getElementById('edit-ig').value = user.ig || '';
+                document.getElementById('edit-fb').value = user.fb || '';
+                document.getElementById('edit-new-password').value = '';
+            }
+
+            document.getElementById('editProfileModal').classList.remove('hidden');
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.add('hidden');
+        }
+
+        async function submitEditProfile() {
+            const newName = document.getElementById('edit-name').value.trim();
+            const newServices = document.getElementById('edit-services').value.trim();
+            const newPortfolio = document.getElementById('edit-portfolio').value.trim();
+            let newIg = document.getElementById('edit-ig').value.trim();
+            const newFb = document.getElementById('edit-fb').value.trim();
+            const newPassword = document.getElementById('edit-new-password').value.trim();
+
+            if (!newName) {
+                showCustomAlert('團隊名稱 / 攝影師稱呼不得為空！', '欄位空白');
+                return;
+            }
+
+            if (newIg && !newIg.startsWith('http://') && !newIg.startsWith('https://')) {
+                const cleanIg = newIg.replace('@', '').trim();
+                newIg = `https://instagram.com/${cleanIg}`;
+            }
+
+            let updateData = {
+                name: newName,
+                services: newServices,
+                portfolio: newPortfolio,
+                ig: newIg,
+                fb: newFb
+            };
+
+            if (newPassword) {
+                updateData.password = newPassword;
+                if (localStorage.getItem('lensmatch_saved_email') === currentUserEmail) {
+                    localStorage.setItem('lensmatch_saved_pass', newPassword);
+                }
+            }
+
+            const { error } = await supabaseClient
+                .from('users')
+                .update(updateData)
+                .eq('email', currentUserEmail);
+
+            if (error) {
+                showCustomAlert('更新失敗：' + error.message, '更新錯誤');
+                return;
+            }
+
+            currentUserName = newName;
+            document.getElementById('user-display-name').innerText = currentUserName;
+            document.getElementById('apply-name').value = currentUserName;
+
+            closeEditProfileModal();
+            showCustomAlert('🎉 個人檔案與資料修改成功！', '更新成功');
+            fetchRatingsAndRanking();
+        }
+
+        function openRandomShopeeLink() {
+            const shopeeLinks = [
+                "https://s.shopee.tw/9fKVCaI3XH",
+                "https://s.shopee.tw/AAGlnVG9WO",
+                "https://s.shopee.tw/9zxLbCGmrN",
+                "https://s.shopee.tw/AUtcC7EsqU",
+                "https://s.shopee.tw/AKaBzoFWBT"
+            ];
+
+            const randomIndex = Math.floor(Math.random() * shopeeLinks.length);
+            window.open(shopeeLinks[randomIndex], '_blank');
+        }
+
+        function handleLogout() {
+            isLoggedIn = false;
+            currentUserEmail = "";
+            currentUserName = "";
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('user-info-section').classList.add('hidden');
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-name').value = '';
+            document.getElementById('name-field-container').classList.add('hidden');
+            document.getElementById('auth-btn').innerText = "登入 / 註冊";
+            document.getElementById('hall-status-tip').innerText = "請先登入以解鎖接案按鈕";
+            document.getElementById('hall-status-tip').className = "text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold";
+
+            renderProjects();
+            showCustomAlert('已成功登出帳號。', '提示');
+        }
+
+        function openForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            document.getElementById('forgot-email').value = '';
+        }
+
+        async function submitResetPasswordWithEmailJS() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const btn = document.getElementById('forgot-btn');
+
+            if (!email || !email.includes('@')) {
+                showCustomAlert('請輸入正確的註冊 Email！', '格式錯誤');
+                return;
+            }
+
+            const { data: user, error: fetchErr } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (!user) {
+                showCustomAlert('❌ 找不到此 Email 的註冊紀錄！', '查無此人');
+                return;
+            }
+
+            const tempPassword = 'lens' + Math.floor(1000 + Math.random() * 9000);
+
+            const { error: updateErr } = await supabaseClient
+                .from('users')
+                .update({ password: tempPassword })
+                .eq('email', email);
+
+            if (updateErr) {
+                showCustomAlert('重設密碼失敗：' + updateErr.message, '系統錯誤');
+                return;
+            }
+
+            btn.innerText = "正在發送郵件...";
+            btn.disabled = true;
+
+            const templateParams = {
+                to_email: email,
+                to_name: user.name,
+                temp_password: tempPassword,
+                message: `您的鏡界平台新臨時密碼為：${tempPassword}，請盡快登入並修改密碼。`
+            };
+
+            emailjs.send('service_ut0kvve', 'template_9fgj4df', templateParams)
+                .then(function(response) {
+                    btn.innerText = "✉️ 發送重設密碼信";
+                    btn.disabled = false;
+                    closeForgotPasswordModal();
+                    showCustomAlert(`✅ 成功！新臨時密碼已自動寄送至：\n${email}\n請至信箱收取。`, '發送成功');
+                }, function(error) {
+                    btn.innerText = "✉️ 發送重設密碼信";
+                    btn.disabled = false;
+                    showCustomAlert('寄信失敗，請檢查網路或稍後再試。', '發送失敗');
+                });
+        }
+
+        async function fetchRatingsAndRanking() {
+            const { data: usersData } = await supabaseClient.from('users').select('*');
+            if (usersData) {
+                usersData.forEach(u => {
+                    freelancerMap[u.email] = u;
+                });
+            }
+
+            const { data: ratings, error } = await supabaseClient
+                .from('ratings')
+                .select('*');
+
+            const rankingContainer = document.getElementById('ranking-container');
+
+            if (error || !ratings || ratings.length === 0) {
+                rankingContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">目前尚無排行榜資料</p>';
+                return;
+            }
+
+            globalratingsData = ratings;
+
+            let stats = {};
+            ratings.forEach(r => {
+                const email = r.freelancer_email || '未知信箱';
+                let name = r.freelancer_name;
+                
+                if (freelancerMap[email] && freelancerMap[email].name) {
+                    name = freelancerMap[email].name;
+                } else if (!name || name === email) {
+                    name = email.split('@')[0];
+                }
+
+                if (!stats[email]) {
+                    stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
+                }
+                stats[email].totalScore += Number(r.rating_score);
+                stats[email].count += 1;
+            });
+
+            let rankingList = Object.keys(stats).map(email => {
+                return {
+                    email: email,
+                    name: stats[email].name,
+                    avg: (stats[email].totalScore / stats[email].count).toFixed(1),
+                    count: stats[email].count
+                };
+            });
+
+            rankingList.sort((a, b) => b.avg - a.avg || b.count - a.count);
+
+            rankingContainer.innerHTML = '';
+            rankingList.slice(0, 20).forEach((item, index) => {
+                let medal = `#${index + 1}`;
+                if(index === 0) medal = '🥇';
+                if(index === 1) medal = '🥈';
+                if(index === 2) medal = '🥉';
+
+                const rankItem = document.createElement('div');
+                rankItem.className = "flex items-center justify-between p-2.5 bg-gray-50 hover:bg-amber-50 rounded-lg border border-gray-100 text-xs cursor-pointer transition";
+                rankItem.onclick = () => openDetailModal(item.email, item.name);
+                rankItem.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-gray-700 w-5 text-center">${medal}</span>
+                        <div>
+                            <p class="font-bold text-gray-900 hover:text-amber-600 underline">${escapeHtml(item.name)}</p>
+                            <p class="text-[10px] text-gray-400">${item.count} 則評價 (點擊看檔案)</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-extrabold text-amber-600 text-sm">★ ${item.avg}</span>
+                    </div>
+                `;
+                rankingContainer.appendChild(rankItem);
+            });
+        }
+
+        function openDetailModal(email, name) {
+            document.getElementById('detail-modal-subtitle').innerText = `攝影師 / 團隊：${name}`;
+            
+            const userProfile = freelancerMap[email] || {};
+            const servicesSpan = document.getElementById('profile-services');
+            const portfolioBtn = document.getElementById('profile-portfolio');
+            const igBtn = document.getElementById('profile-ig');
+            const fbBtn = document.getElementById('profile-fb');
+
+            servicesSpan.innerText = userProfile.services || "尚未填寫服務項目與個人介紹";
+
+            if (userProfile.portfolio && userProfile.portfolio.trim() !== "") {
+                portfolioBtn.href = userProfile.portfolio;
+                portfolioBtn.classList.remove('hidden');
+            } else {
+                portfolioBtn.classList.add('hidden');
+            }
+
+            if (userProfile.ig && userProfile.ig.trim() !== "") {
+                igBtn.href = userProfile.ig;
+                igBtn.classList.remove('hidden');
+            } else {
+                igBtn.classList.add('hidden');
+            }
+
+            if (userProfile.fb && userProfile.fb.trim() !== "") {
+                fbBtn.href = userProfile.fb;
+                fbBtn.classList.remove('hidden');
+            } else {
+                fbBtn.classList.add('hidden');
+            }
+
+            const listContainer = document.getElementById('detail-reviews-list');
+            listContainer.innerHTML = '';
+
+            const userReviews = globalratingsData.filter(r => r.freelancer_email === email);
+
+            if (userReviews.length === 0) {
+                listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">目前尚無詳細評價</p>';
+            } else {
+                userReviews.forEach(rev => {
+                    let stars = '';
+                    for(let i=1; i<=5; i++) {
+                        stars += i <= rev.rating_score ? '★' : '☆';
+                    }
+                    const item = document.createElement('div');
+                    item.className = "p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-amber-500 font-bold">${stars} (${rev.rating_score}分)</span>
+                            <span class="text-[10px] text-gray-400">評價者: ${maskEmail(rev.rater_email)}</span>
+                        </div>
+                        <p class="text-gray-700 font-semibold mt-1">💬 "${escapeHtml(rev.comment)}"</p>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function applyQuickFillPortfolio(selectElement) {
+            const val = selectElement.value;
+            if (!val) return;
+
+            const userProfile = freelancerMap[currentUserEmail] || {};
+            const portfolioInput = document.getElementById('apply-portfolio');
+
+            if (val === 'all') {
+                let combinedText = "";
+                if (userProfile.portfolio && userProfile.portfolio.trim() !== "") combinedText += `作品集：${userProfile.portfolio}\n`;
+                if (userProfile.ig && userProfile.ig.trim() !== "") combinedText += `IG：${userProfile.ig}\n`;
+                if (userProfile.fb && userProfile.fb.trim() !== "") combinedText += `FB：${userProfile.fb}`;
+
+                if (combinedText.trim() === "") {
+                    showCustomAlert('⚠️ 您的帳號尚未在個人資料中填寫任何連結，請先至會員中心「修改資料」補填！', '提示');
+                } else {
+                    portfolioInput.value = combinedText.trim();
+                }
+            }
+            selectElement.value = "";
+        }
+
+        function openRatingModal() {
+            if (!isLoggedIn) {
+                showCustomAlert('⚠️ 請先至左側會員中心登入帳號，才可留下評價！', '會員限定');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            document.getElementById('ratingModal').classList.remove('hidden');
+        }
+
+        function closeRatingModal() {
+            document.getElementById('ratingModal').classList.add('hidden');
+        }
+
+        function setRating(score) {
+            document.getElementById('selected-rating').value = score;
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < score) {
+                    star.className = "star text-amber-400";
+                    star.innerText = "★";
+                } else {
+                    star.className = "star text-gray-300";
+                    star.innerText = "☆";
+                }
+            });
+        }
+
+        async function submitRating() {
+            const targetEmail = document.getElementById('rating-target-email').value.trim().toLowerCase();
+            const score = document.getElementById('selected-rating').value;
+            const comment = document.getElementById('rating-comment-select').value;
+
+            if (!targetEmail || !targetEmail.includes('@')) {
+                showCustomAlert('請輸入正確的接案者 Email！', '格式錯誤');
+                return;
+            }
+
+            if (targetEmail === currentUserEmail.toLowerCase()) {
+                showCustomAlert('⚠️ 哎呀！您不能給自己評分或留下評價喔！', '無法評分');
+                return;
+            }
+
+            const targetName = (freelancerMap[targetEmail] && freelancerMap[targetEmail].name) || targetEmail.split('@')[0];
+
+            const { error } = await supabaseClient
+                .from('ratings')
+                .insert([
+                    { 
+                        freelancer_name: targetName,
+                        freelancer_email: targetEmail, 
+                        rater_email: currentUserEmail, 
+                        rating_score: parseInt(score), 
+                        comment: comment 
+                    }
+                ]);
+
+            if (error) {
+                showCustomAlert('送出評價失敗：' + error.message, '送出錯誤');
+                return;
+            }
+
+            document.getElementById('rating-target-email').value = '';
+            closeRatingModal();
+            showCustomAlert('感謝您的評價！排行榜已即時更新。', '成功');
+            fetchRatingsAndRanking();
+        }
+
+        async function fetchProjects() {
+            const container = document.getElementById('projects-container');
+            container.innerHTML = '<p class="text-sm text-gray-500 text-center py-6">正在從雲端載入最新案件...</p>';
+
+            const { data: projects, error } = await supabaseClient
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<p class="text-sm text-red-500 text-center py-6">載入案件失敗：' + error.message + '</p>';
+                return;
+            }
+
+            allProjects = projects || [];
+            renderProjects();
+        }
+
+        function filterCategory(category, btnElement) {
+            currentCategory = category;
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+            });
+            btnElement.className = "filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+
+            renderProjects();
+        }
+
+        function maskEmail(email) {
+            if (!email || !email.includes('@')) return "保密中";
+            const parts = email.split('@');
+            const name = parts[0];
+            const domain = parts[1];
+            if (name.length <= 2) {
+                return name[0] + '***@' + domain;
+            }
+            return name.substring(0, 2) + '****@' + domain;
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+            
+            const filteredProjects = currentCategory === '全部' 
+                ? allProjects 
+                : allProjects.filter(p => p.category === currentCategory);
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-500 text-center py-6">目前「${currentCategory}」分類下尚無任何拍攝案件。</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            filteredProjects.forEach(p => {
+                let badgeColor = "bg-blue-100 text-blue-800";
+                if(p.category === "活動紀錄") badgeColor = "bg-purple-100 text-purple-800";
+                if(p.category === "婚禮紀錄") badgeColor = "bg-pink-100 text-pink-800";
+                if(p.category === "人像寫真") badgeColor = "bg-green-100 text-green-800";
+                if(p.category === "自媒體") badgeColor = "bg-yellow-100 text-yellow-800";
+                if(p.category === "找剪輯") badgeColor = "bg-indigo-100 text-indigo-800";
+                if(p.category === "短影音") badgeColor = "bg-red-100 text-red-800";
+
+                let dateStr = "剛剛";
+                if (p.created_at) {
+                    const dateObj = new Date(p.created_at);
+                    dateStr = dateObj.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+                }
+
+                const masked = maskEmail(p.client_email);
+                const emailDisplay = `發案人：${masked}`;
+                
+                const btnHtml = isLoggedIn ? 
+                    `<button onclick="tryApply('${escapeHtml(p.title)}', '${escapeHtml(p.category)}', 'NT$ ${escapeHtml(p.budget)}', '${escapeHtml(p.description)}', '${escapeHtml(p.client_email)}')" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">立即接案應徵 🚀</button>` :
+                    `<button onclick="tryApply()" class="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition cursor-not-allowed">🔒 登入後才可接案</button>`;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                <span class="${badgeColor} text-xs px-2.5 py-1 rounded-full font-medium">${p.category}</span>
+                                <span class="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium border border-gray-200 flex items-center gap-1">
+                                    📅 發布時間：${dateStr}
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mt-1">${escapeHtml(p.title)}</h3>
+                        </div>
+                        <span class="text-amber-600 font-bold text-base">NT$ ${escapeHtml(p.budget)}</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-3">${escapeHtml(p.description)}</p>
+                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                        <span>${emailDisplay}</span>
+                        ${btnHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openPostModal() {
+            if (!isLoggedIn) {
+                showCustomAlert('請先在左側登入帳號再發案！', '會員限定');
+                return;
+            }
+            document.getElementById('postModal').classList.remove('hidden');
+        }
+        function closePostModal() { document.getElementById('postModal').classList.add('hidden'); }
+
+        async function submitNewProject() {
+            const title = document.getElementById('post-title').value.trim();
+            const category = document.getElementById('post-category').value;
+            const budget = document.getElementById('post-budget').value.trim();
+            const desc = document.getElementById('post-desc').value.trim();
+
+            if(!title || !budget || !desc) {
+                showCustomAlert('請完整填寫案件標題、預算與說明！', '欄位未填');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('projects')
+                .insert([
+                    { 
+                        title: title, 
+                        category: category, 
+                        budget: budget, 
+                        description: desc, 
+                        client_email: currentUserEmail 
+                    }
+                ]);
+
+            if (error) {
+                showCustomAlert('發布失敗：' + error.message, '發布錯誤');
+                return;
+            }
+
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-budget').value = '';
+            document.getElementById('post-desc').value = '';
+            closePostModal();
+            showCustomAlert('成功發布至雲端資料庫！', '發布成功');
+            
+            fetchProjects();
+        }
+
+        function tryApply(title, category, budget, desc, email) {
+            if (!isLoggedIn) {
+                showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號。', '會員限定');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            document.getElementById('target-title').value = title;
+            document.getElementById('target-budget').value = budget;
+            document.getElementById('target-desc').value = desc;
+            document.getElementById('target-email').value = email;
+            document.getElementById('display-target-email').value = email;
+            
+            if (currentUserName) {
+                document.getElementById('apply-name').value = currentUserName;
+            }
+            
+            document.getElementById('apply-modal-subtitle').innerText = `應徵項目：${title} (${budget})`;
+            document.getElementById('applyModal').classList.remove('hidden');
+        }
+
+        function closeApplyModal() {
+            document.getElementById('applyModal').classList.add('hidden');
+        }
+
+        // 📱 點擊後先開啟裝置提示視窗，並生成預覽內文
+        function showDeviceNoticeModal() {
+            const title = document.getElementById('target-title').value;
+            const budget = document.getElementById('target-budget').value;
+            const desc = document.getElementById('target-desc').value;
+            const clientEmail = document.getElementById('target-email').value;
+
+            const name = document.getElementById('apply-name').value.trim();
+            const contact = document.getElementById('apply-contact').value.trim();
+            const portfolio = document.getElementById('apply-portfolio').value.trim();
+            const message = document.getElementById('apply-message').value.trim();
+
+            if(!name || !contact || !portfolio) {
+                showCustomAlert('請完整填寫「攝影師/團隊名稱」、「LINE ID 或電話」與「作品集連結(Google雲端) or其他連結」！', '欄位未填');
+                return;
+            }
+
+            const formattedText = 
+`發案者 Email: ${clientEmail}
+
+鏡界 應徵者來信
+
+--------------------------------------
+📋 應徵案件：${title}
+💰 案件預算：${budget}
+📄 案件說明：${desc}
+--------------------------------------
+👤 應徵攝影師/團隊：${name}
+📞 聯絡方式 (LINE/電話)：${contact}
+🔗 作品集與社群連結：
+${portfolio}
+💬 自我介紹 / 報價備註：
+${message || '無'}
+--------------------------------------`;
+
+            document.getElementById('notice-preview-text').value = formattedText;
+            document.getElementById('notice-target-email').value = clientEmail;
+
+            // 關閉應徵表單，打開提示視窗
+            document.getElementById('applyModal').classList.add('hidden');
+            document.getElementById('deviceNoticeModal').classList.remove('hidden');
+        }
+
+        function closeDeviceNoticeModal() {
+            document.getElementById('deviceNoticeModal').classList.add('hidden');
+        }
+
+        // 📋 手機版專用：僅複製文字
+        function copyNoticeTextOnly() {
+            const text = document.getElementById('notice-preview-text').value;
+            navigator.clipboard.writeText(text).then(() => {
+                showCustomAlert('✅ 應徵內文已成功複製到剪貼簿！\n\n請前往您的手機郵件 App 貼上並發送給發案者。', '複製成功');
+                closeDeviceNoticeModal();
+            }).catch(err => {
+                showCustomAlert('複製失敗，請手動長按框選複製。', '提示');
+            });
+        }
+
+        // 💻 電腦版專用：直接複製並打開 Gmail
+        function proceedGmailOpen() {
+            const text = document.getElementById('notice-preview-text').value;
+            const clientEmail = document.getElementById('notice-target-email').value;
+            const title = document.getElementById('target-title').value;
+
+            navigator.clipboard.writeText(text).then(() => {
+                closeDeviceNoticeModal();
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${encodeURIComponent('【鏡界應徵】' + title)}&body=${encodeURIComponent(text)}`;
+                window.open(gmailUrl, '_blank');
+            }).catch(err => {
+                showCustomAlert('複製失敗，請手動複製。', '提示');
+            });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
