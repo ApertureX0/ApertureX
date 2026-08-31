@@ -178,7 +178,7 @@
                 <div class="flex justify-between items-center border-b pb-2 flex-wrap gap-2">
                     <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block animate-pulse shrink-0"></span>
-                        <span>會員即時聊天大廳江湖救急 有問題就問 攝影交流</span>
+                        <span>💬 會員即時聊天大廳 攝影交流</span>
                     </h3>
                 </div>
 
@@ -843,7 +843,6 @@
             }
         });
 
-        // 💬 會員即時聊天大廳功能 (自動保留最新50則訊息)
         async function fetchChatMessages() {
             const chatBox = document.getElementById('chat-messages-box');
             const { data: messages, error } = await supabaseClient
@@ -918,7 +917,6 @@
 
             input.value = '';
 
-            // 超過50則自動刪除最舊的訊息
             const { data: allMsgs } = await supabaseClient
                 .from('global_chat')
                 .select('id, created_at')
