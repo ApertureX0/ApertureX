@@ -490,8 +490,8 @@
         </div>
     </div>
 
-    <!-- 🚨 全平台通用警告/提示彈窗 -->
-    <div id="customAlertModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+    <!-- 🚨 全平台通用警告/提示彈窗 (已升級 z-[999]，保證浮在最上層) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
             <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
                 ⚠️
@@ -1237,10 +1237,6 @@
                 const masked = maskEmail(p.client_email);
                 const emailDisplay = `發案人：${masked}`;
                 
-                const btnHtml = isLoggedIn ? 
-                    `<button onclick="tryApply('${escapeHtml(p.title)}', '${escapeHtml(p.category)}', 'NT$ ${escapeHtml(p.budget)}', '${escapeHtml(p.description)}', '${escapeHtml(p.client_email)}')" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">立即接案應徵 🚀</button>` :
-                    `<button onclick="tryApply()" class="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition cursor-not-allowed">🔒 登入後才可接案</button>`;
-
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition";
                 card.innerHTML = `
@@ -1259,9 +1255,24 @@
                     <p class="text-gray-600 text-sm mt-3">${escapeHtml(p.description)}</p>
                     <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
                         <span>${emailDisplay}</span>
-                        ${btnHtml}
+                        <div class="apply-btn-slot"></div>
                     </div>
                 `;
+
+                const slot = card.querySelector('.apply-btn-slot');
+                const btn = document.createElement('button');
+                
+                if (isLoggedIn) {
+                    btn.className = "bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer";
+                    btn.innerText = "立即接案應徵 🚀";
+                    btn.onclick = () => tryApply(p.title, p.category, 'NT$ ' + p.budget, p.description, p.client_email);
+                } else {
+                    btn.className = "bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition cursor-not-allowed";
+                    btn.innerText = "🔒 登入後才可接案";
+                    btn.onclick = () => tryApply();
+                }
+                slot.appendChild(btn);
+
                 container.appendChild(card);
             });
         }
@@ -1337,7 +1348,7 @@
             document.getElementById('applyModal').classList.add('hidden');
         }
 
-        // 📱 點擊後先開啟裝置提示視窗，並生成預覽內文
+        // 📱 修改防呆邏輯：先檢查欄位，若未填則直接跳出警告，【不會】關閉填寫表單！
         function showDeviceNoticeModal() {
             const title = document.getElementById('target-title').value;
             const budget = document.getElementById('target-budget').value;
@@ -1351,7 +1362,7 @@
 
             if(!name || !contact || !portfolio) {
                 showCustomAlert('請完整填寫「攝影師/團隊名稱」、「LINE ID 或電話」與「作品集連結(Google雲端) or其他連結」！', '欄位未填');
-                return;
+                return; // 🛑 直接中斷，停留在填寫表單內讓使用者補填！
             }
 
             const formattedText = 
