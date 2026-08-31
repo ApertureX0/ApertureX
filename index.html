@@ -43,7 +43,8 @@
                 <div class="text-xs text-gray-400 hidden sm:block">
                     專業攝影師與團隊即時動態
                 </div>
-                <button onclick="openSupportEmail()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1 cursor-pointer">
+                <!-- 🎯 修改客服按鈕觸發專屬彈窗 -->
+                <button onclick="openSupportModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1 cursor-pointer">
                     💬 客服中心
                 </button>
             </div>
@@ -196,6 +197,29 @@
                 <p class="text-sm text-gray-500 text-center py-6">正在從雲端載入最新案件...</p>
             </div>
         </main>
+    </div>
+
+    <!-- 💬 客服中心專屬彈窗 -->
+    <div id="supportModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
+            <button onclick="closeSupportModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                💬
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-1">ApertureX 客服中心</h3>
+                <p class="text-xs text-gray-600 leading-relaxed">客服信箱：<br><b class="text-amber-700 text-sm select-all">nobodyknows1015@gmail.com</b></p>
+            </div>
+            <div class="space-y-2 pt-1">
+                <!-- 🎯 智慧裝置判斷按鈕 -->
+                <button onclick="handleSupportAction()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition text-xs cursor-pointer shadow-md">
+                    聯繫客服
+                </button>
+                <button onclick="closeSupportModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-xl font-semibold transition text-xs cursor-pointer">
+                    關閉
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- 👥 所有註冊攝影師與團隊獨立列表彈窗 -->
@@ -739,6 +763,30 @@
         </div>
     </div>
 
+    <!-- 💬 客服中心專屬彈窗 (支援手機版一鍵複製、電腦版跳轉Gmail) -->
+    <div id="supportModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
+            <button onclick="closeSupportModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                💬
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-1">ApertureX 客服中心</h3>
+                <p class="text-xs text-gray-600 leading-relaxed mb-2">如果您在使用平台時遇到任何問題，歡迎隨時聯繫我們：</p>
+                <!-- 顯示客服信箱供複製或預覽 -->
+                <input type="text" id="support-email-input" readonly value="nobodyknows1015@gmail.com" class="w-full text-xs text-center bg-gray-50 p-2 border border-gray-200 rounded-lg font-mono text-gray-700 select-all">
+            </div>
+            <div class="space-y-2 pt-1">
+                <button onclick="handleSupportAction()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition text-xs cursor-pointer shadow-md flex items-center justify-center gap-2">
+                    📋 一鍵複製客服信箱 / 轉跳 Gmail
+                </button>
+                <button onclick="closeSupportModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-xl font-semibold transition text-xs cursor-pointer">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 頁尾 -->
     <footer class="bg-white border-t border-gray-200 mt-auto py-4 text-center text-xs text-gray-500 space-y-1">
         <p>© 2026 ApertureX 光圈X. All rights reserved. 專業攝影師接案平台。</p>
@@ -810,6 +858,35 @@
             globalCommentsData = comments || [];
             renderProjects();
             updateMyProjectsBadge();
+        }
+
+        // 💬 開啟與關閉客服中心彈窗
+        function openSupportModal() {
+            document.getElementById('supportModal').classList.remove('hidden');
+        }
+        function closeSupportModal() {
+            document.getElementById('supportModal').classList.add('hidden');
+        }
+
+        // 📱 智慧裝置判斷：手機版複製信箱，電腦版轉跳 Gmail
+        function handleSupportAction() {
+            const supportEmail = "nobodyknows1015@gmail.com";
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                navigator.clipboard.writeText(supportEmail).then(() => {
+                    showCustomAlert('✅ 客服信箱已複製：\n' + supportEmail + '\n請前往您的手機郵件 App 貼上並發信！', '複製成功');
+                    closeSupportModal();
+                }).catch(err => {
+                    showCustomAlert('客服信箱：' + supportEmail, '客服資訊');
+                });
+            } else {
+                const subject = "【ApertureX 平台客服詢問】";
+                const body = "您好，我想詢問關於 ApertureX 平台的問題：\n\n";
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(supportEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                window.open(gmailUrl, '_blank');
+                closeSupportModal();
+            }
         }
 
         function formatCurrencyInput(input) {
@@ -884,14 +961,6 @@
         }
         function closeRegisterProfileModal() {
             document.getElementById('registerProfileModal').classList.add('hidden');
-        }
-
-        function openSupportEmail() {
-            const supportEmail = "nobodyknows1015@gmail.com";
-            const subject = "【ApertureX 平台客服詢問】";
-            const body = "您好，我想詢問關於 ApertureX 平台的問題：\n\n";
-            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(supportEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(gmailUrl, '_blank');
         }
 
         function openAllPhotographersModal() {
