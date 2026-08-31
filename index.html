@@ -128,9 +128,10 @@
                         📝 我要發佈新案件
                     </button>
 
-                    <!-- 📂 我的發案管理按鈕 -->
-                    <button onclick="openMyProjectsModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1 cursor-pointer">
+                    <!-- 📂 我的發案管理按鈕 (帶有動態通知紅點) -->
+                    <button onclick="openMyProjectsModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer relative">
                         📂 我的發案管理
+                        <span id="my-projects-badge" class="hidden bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-extrabold animate-pulse">0</span>
                     </button>
 
                     <button onclick="openEditProfileModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 cursor-pointer">
@@ -212,12 +213,12 @@
 
     <!-- 📂 我的發案管理彈窗 -->
     <div id="myProjectsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
             <button onclick="closeMyProjectsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
-            <h3 class="text-xl font-bold text-gray-900 mb-1">📂 我的發案管理</h3>
-            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">檢視您發布過的所有案件。可點擊編輯修改內容、點擊刪除移除案件，或點擊結案並評價。</p>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">📂 我的發案與應徵留言管理</h3>
+            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">檢視您發布的案件及攝影師的應徵留言紀錄。</p>
             
-            <div id="my-projects-list-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
+            <div id="my-projects-list-container" class="space-y-4 overflow-y-auto flex-grow pr-1">
                 <p class="text-xs text-gray-400 text-center py-6">載入您的發案紀錄中...</p>
             </div>
         </div>
@@ -443,8 +444,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$)</label>
-                        <!-- 🎯 修正為 blur（離開輸入框時才格式化），徹底解決打 3000 變成 30,000 的問題 -->
-                        <input type="text" id="post-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3000 或 3000~5000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                        <input type="text" id="post-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div>
@@ -625,15 +625,15 @@
         </div>
     </div>
 
-    <!-- 📱 裝置提示與確認彈窗 (用於寄信) -->
+    <!-- 📱 裝置提示與確認彈窗 (用於寄信與送出應徵) -->
     <div id="deviceNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <span>📱 寄信方式選擇</span>
+                <span>📱 寄信與應徵確認</span>
             </h3>
             <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 leading-relaxed space-y-2">
-                <p><b>手機版用戶：</b>由於手機系統限制，請點擊下方<b>「一鍵複製」</b>將應徵內文複製下來，然後自行前往手機的 Gmail / 郵件 App 貼上發送！</p>
-                <p><b>電腦版用戶：</b>請直接點擊<b>「繼續前往 Gmail 寄信」</b>，系統將自動為您代入所有內文。</p>
+                <p><b>貼心提醒：</b>點擊下方按鈕後，系統會<b>自動將您的應徵留言送至案主的發案管理後台</b>，並為您開啟 Gmail 寄信！</p>
+                <p><b>手機版用戶：</b>如果是用手機版本，請按下「一鍵複製」，自行前往郵件 APP 手動寄出資訊！</p>
             </div>
 
             <div>
@@ -644,11 +644,11 @@
             <input type="hidden" id="notice-target-email">
 
             <div class="space-y-2 pt-1">
-                <button onclick="copyNoticeTextOnly()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
-                    📋 一鍵複製內文 (手機版專用)
+                <button onclick="copyNoticeTextAndComment()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
+                    📋 一鍵複製內文並送出應徵留言 (手機版專用)
                 </button>
-                <button onclick="proceedGmailOpen()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
-                    💻 繼續前往 Gmail 寄信 (電腦版專用)
+                <button onclick="proceedGmailOpenWithComment()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
+                    💻 繼續前往 Gmail 寄信並送出應徵 (電腦版專用)
                 </button>
                 <button onclick="closeDeviceNoticeModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-xl font-semibold transition text-xs cursor-pointer">
                     🔙 返回
@@ -657,7 +657,7 @@
         </div>
     </div>
 
-    <!-- 🚨 全平台通用警告/提示彈窗 (層級設定為最高 z-[999]) -->
+    <!-- 🚨 全平台通用警告/提示彈窗 -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
             <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
@@ -675,12 +675,13 @@
 
     <!-- 接案者填寫基本資料彈窗 -->
     <div id="applyModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeApplyModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             
             <h3 class="text-xl font-bold text-gray-900 mb-1">🎯 填寫接案基本資料</h3>
             <p id="apply-modal-subtitle" class="text-xs text-amber-600 font-bold mb-4"></p>
             
+            <input type="hidden" id="target-project-id">
             <input type="hidden" id="target-title">
             <input type="hidden" id="target-budget">
             <input type="hidden" id="target-desc">
@@ -700,7 +701,6 @@
                     <input type="text" id="apply-contact" placeholder="例如：line_id_123 或 0912345678" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
                 
-                <!-- 🚀 快速帶入所有註冊連結的選單 -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-semibold text-gray-600">作品集連結(Google雲端) or其他連結 <span class="text-red-500">*</span></label>
@@ -714,12 +714,17 @@
 
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-gray-600">簡短自介 / 報價備註</label>
+                        <label class="block text-xs font-semibold text-gray-600">簡短自介 / 報價備註 <span class="text-red-500">*</span></label>
                         <button type="button" onclick="insertMyProfileIntro()" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
                             ✨ 一鍵代入個人簡介
                         </button>
                     </div>
                     <textarea id="apply-message" rows="3" placeholder="例如：有 3 年商業攝影經驗..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">💬 應徵者留言 (將顯示於案件下方與管理後台) <span class="text-red-500">*</span></label>
+                    <textarea id="apply-comment" rows="2" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-amber-50/40">應徵信件已寄出 如果找不到請在垃圾郵件尋找~感恩</textarea>
                 </div>
                 
                 <div class="flex gap-2 pt-2">
@@ -727,7 +732,7 @@
                         🔙 返回
                     </button>
                     <button onclick="showDeviceNoticeModal()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                        📋 複製資料並前往 Gmail 寄信
+                        📋 複製資料並前往應徵
                     </button>
                 </div>
             </div>
@@ -762,10 +767,12 @@
         let broadcastList = [];
         let broadcastIndex = 0;
         let globalRankingList = [];
+        let globalCommentsData = [];
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchProjects();
             fetchRatingsAndRanking();
+            setupRealtimeSubscription();
             
             const urlParams = new URLSearchParams(window.location.search);
             const rateEmail = urlParams.get('rate');
@@ -787,7 +794,24 @@
             }
         });
 
-        // 💡 支援固定金額或範圍金額 (如 3,000~5,000) 於離開輸入框(blur)時自動加上千分位逗點
+        function setupRealtimeSubscription() {
+            supabaseClient
+                .channel('public:project_comments')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'project_comments' }, payload => {
+                    fetchCommentsAndRefresh();
+                })
+                .subscribe();
+        }
+
+        async function fetchCommentsAndRefresh() {
+            const { data: comments } = await supabaseClient
+                .from('project_comments')
+                .select('*');
+            globalCommentsData = comments || [];
+            renderProjects();
+            updateMyProjectsBadge();
+        }
+
         function formatCurrencyInput(input) {
             let val = input.value.trim();
             if (!val) return;
@@ -806,7 +830,6 @@
             }
         }
 
-        // 💡 快速代入發案範本功能（地點 / 日期 / 工作內容）
         function insertProjectTemplate(elementId) {
             const templateText = 
 `【拍攝地點】：
@@ -820,7 +843,6 @@
             }
         }
 
-        // 🎯 一鍵代入登入中攝影師在會員中心填寫的個人簡介
         async function insertMyProfileIntro() {
             if (!currentUserEmail) {
                 showCustomAlert('⚠️ 請先登入會員，才可使用一鍵代入個人簡介！', '提示');
@@ -841,7 +863,6 @@
             }
         }
 
-        // 🚨 手機友善的自定義警告視窗取代 alert
         function showCustomAlert(message, title = "系統提示") {
             document.getElementById('custom-alert-title').innerText = title;
             document.getElementById('custom-alert-message').innerText = message;
@@ -852,23 +873,19 @@
             document.getElementById('customAlertModal').classList.add('hidden');
         }
 
-        // 📜 開啟與關閉免責聲明彈窗
         function openDisclaimerModal() {
             document.getElementById('disclaimerModal').classList.remove('hidden');
         }
         function closeDisclaimerModal() {
             document.getElementById('disclaimerModal').classList.add('hidden');
         }
-
         function closeRegisterDisclaimerModal() {
             document.getElementById('registerDisclaimerModal').classList.add('hidden');
         }
-
         function closeRegisterProfileModal() {
             document.getElementById('registerProfileModal').classList.add('hidden');
         }
 
-        // 💬 開啟客服中心 Gmail 寄信視窗
         function openSupportEmail() {
             const supportEmail = "nobodyknows1015@gmail.com";
             const subject = "【ApertureX 平台客服詢問】";
@@ -877,7 +894,6 @@
             window.open(gmailUrl, '_blank');
         }
 
-        // 👥 開啟「所有註冊攝影師與團隊」獨立列表彈窗
         function openAllPhotographersModal() {
             const container = document.getElementById('all-photographers-container');
             container.innerHTML = '';
@@ -1091,12 +1107,11 @@
             document.getElementById('hall-status-tip').innerText = "已解鎖完整應徵權限";
             document.getElementById('hall-status-tip').className = "text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold";
 
-            document.getElementById('apply-name').value = currentUserName;
             renderProjects();
             fetchRatingsAndRanking();
+            updateMyProjectsBadge();
         }
 
-        // 🎯 專屬跑馬燈更新
         function updateBroadcastFromRanking(rankingList) {
             broadcastList = [];
             if (rankingList && rankingList.length > 0) {
@@ -1125,7 +1140,6 @@
             }, 4000);
         }
 
-        // ⚙️ 開啟修改資料與密碼彈窗
         async function openEditProfileModal() {
             const { data: user, error } = await supabaseClient
                 .from('users')
@@ -1194,7 +1208,6 @@
 
             currentUserName = newName;
             document.getElementById('user-display-name').innerText = currentUserName;
-            document.getElementById('apply-name').value = currentUserName;
 
             closeEditProfileModal();
             showCustomAlert('🎉 個人檔案與資料修改成功！', '更新成功');
@@ -1263,7 +1276,7 @@
             btn.disabled = true;
 
             const templateParams = {
-                to_email: email, // 💡 確保這裡正確對應使用者輸入的註冊信箱
+                to_email: email,
                 to_name: user.name || user.services || '會員',
                 temp_password: tempPassword,
                 message: `您的 ApertureX 平台新臨時密碼為：${tempPassword}，請盡快登入並修改密碼。`
@@ -1375,7 +1388,6 @@
             });
         }
 
-        // 💡 智慧解析文字中的網址：將 YouTube 轉為美觀的「前往觀看影片」按鈕卡片
         function parseTextWithLinks(text) {
             if (!text) return "未填寫";
             
@@ -1577,8 +1589,14 @@
                 return;
             }
 
+            const { data: comments } = await supabaseClient
+                .from('project_comments')
+                .select('*');
+
+            globalCommentsData = comments || [];
             allProjects = projects || [];
             renderProjects();
+            updateMyProjectsBadge();
         }
 
         function filterCategory(category, btnElement) {
@@ -1637,8 +1655,11 @@
                 const emailDisplay = `發案人：${masked}`;
                 const isClosed = p.status === '已結案';
                 
+                const projectComments = globalCommentsData.filter(c => c.project_id === p.id);
+                const commentCount = projectComments.length;
+
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition";
+                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-4";
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -1653,36 +1674,111 @@
                         </div>
                         <span class="text-amber-600 font-bold text-base">NT$ ${escapeHtml(p.budget)}</span>
                     </div>
-                    <p class="text-gray-600 text-sm mt-3">${escapeHtml(p.description)}</p>
-                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                    <p class="text-gray-600 text-sm">${escapeHtml(p.description)}</p>
+                    
+                    <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 flex-wrap gap-2">
                         <span>${emailDisplay}</span>
-                        <div class="apply-btn-slot"></div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleCommentSection(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer">
+                                💬 展開查看應徵留言 (${commentCount})
+                            </button>
+                            <button type="button" class="apply-trigger-btn bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+                                data-id="${p.id}"
+                                data-title="${escapeHtml(p.title)}"
+                                data-category="${escapeHtml(p.category)}"
+                                data-budget="NT$ ${escapeHtml(p.budget)}"
+                                data-desc="${escapeHtml(p.description)}"
+                                data-email="${escapeHtml(p.client_email)}">
+                                ${isClosed ? '🔒 案件已結案' : (isLoggedIn ? '立即接案應徵 🚀' : '🔒 登入後才可接案')}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 💬 展開式應徵留言列表 -->
+                    <div id="comment-section-${p.id}" class="hidden bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 mt-3">
+                        <h4 class="text-xs font-bold text-gray-800 border-b pb-1">💬 已收到的應徵留言記錄 (${commentCount})</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            ${projectComments.length === 0 ? '<p class="text-xs text-gray-400 text-center py-2">目前尚無攝影師留言應徵。</p>' : 
+                                projectComments.map(c => `
+                                    <div class="bg-white p-2.5 rounded-lg border border-gray-200 text-xs space-y-1">
+                                        <div class="flex justify-between font-bold">
+                                            <span onclick="openDetailModal('${escapeHtml(c.freelancer_email)}', '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
+                                                📷 ${escapeHtml(c.freelancer_name)} (點擊查看評價)
+                                            </span>
+                                            <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
+                                        </div>
+                                        <p class="text-gray-700 whitespace-pre-line">${escapeHtml(c.message)}</p>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
                     </div>
                 `;
 
-                const slot = card.querySelector('.apply-btn-slot');
-                const btn = document.createElement('button');
-                
+                const applyBtn = card.querySelector('.apply-trigger-btn');
                 if (isClosed) {
-                    btn.className = "bg-gray-200 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed";
-                    btn.innerText = "🔒 案件已結案";
-                    btn.disabled = true;
-                } else if (isLoggedIn) {
-                    btn.className = "bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer";
-                    btn.innerText = "立即接案應徵 🚀";
-                    btn.onclick = () => tryApply(p.title, p.category, 'NT$ ' + p.budget, p.description, p.client_email);
+                    applyBtn.className = "bg-gray-200 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed";
+                    applyBtn.disabled = true;
+                } else if (!isLoggedIn) {
+                    applyBtn.className = "bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition cursor-not-allowed";
+                    applyBtn.onclick = () => tryApply();
                 } else {
-                    btn.className = "bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition cursor-not-allowed";
-                    btn.innerText = "🔒 登入後才可接案";
-                    btn.onclick = () => tryApply();
+                    applyBtn.onclick = () => {
+                        tryApply(
+                            applyBtn.dataset.id,
+                            applyBtn.dataset.title,
+                            applyBtn.dataset.category,
+                            applyBtn.dataset.budget,
+                            applyBtn.dataset.desc,
+                            applyBtn.dataset.email
+                        );
+                    };
                 }
-                slot.appendChild(btn);
 
                 container.appendChild(card);
             });
         }
 
-        // 📂 開啟「我的發案管理」彈窗
+        function toggleCommentSection(projectId) {
+            const section = document.getElementById(`comment-section-${projectId}`);
+            if (section) {
+                section.classList.toggle('hidden');
+            }
+        }
+
+        async function updateMyProjectsBadge() {
+            if (!isLoggedIn) {
+                document.getElementById('my-projects-badge').classList.add('hidden');
+                return;
+            }
+
+            const { data: myProjects } = await supabaseClient
+                .from('projects')
+                .select('id')
+                .eq('client_email', currentUserEmail);
+
+            if (!myProjects || myProjects.length === 0) {
+                document.getElementById('my-projects-badge').classList.add('hidden');
+                return;
+            }
+
+            const projectIds = myProjects.map(p => p.id);
+
+            const { data: unreadComments } = await supabaseClient
+                .from('project_comments')
+                .select('*')
+                .in('project_id', projectIds)
+                .eq('is_read', false);
+
+            const badge = document.getElementById('my-projects-badge');
+            if (unreadComments && unreadComments.length > 0) {
+                badge.innerText = unreadComments.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
         async function openMyProjectsModal() {
             if (!isLoggedIn) {
                 showCustomAlert('⚠️ 請先登入帳號！', '會員限定');
@@ -1704,37 +1800,75 @@
                 return;
             }
 
+            const projectIds = myProjects.map(p => p.id);
+            await supabaseClient
+                .from('project_comments')
+                .update({ is_read: true })
+                .in('project_id', projectIds)
+                .eq('is_read', false);
+
+            updateMyProjectsBadge();
+
             container.innerHTML = '';
             myProjects.forEach(p => {
                 const isClosed = p.status === '已結案';
+                const projectComments = globalCommentsData.filter(c => c.project_id === p.id);
+
                 const item = document.createElement('div');
-                item.className = "p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3";
+                item.className = "p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-3";
                 
-                item.innerHTML = `
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-900 text-sm">${escapeHtml(p.title)}</span>
-                            <span class="${isClosed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded font-semibold">${p.status || '招募中'}</span>
+                let commentsHtml = '';
+                if (projectComments.length === 0) {
+                    commentsHtml = '<p class="text-gray-400 italic">目前尚無攝影師留言應徵。</p>';
+                } else {
+                    commentsHtml = projectComments.map(c => `
+                        <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-1">
+                            <div class="flex justify-between font-bold">
+                                <span onclick="openDetailModal('${escapeHtml(c.freelancer_email)}', '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
+                                    📷 應徵者：${escapeHtml(c.freelancer_name)} (點擊查看評價)
+                                </span>
+                                <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
+                            </div>
+                            <p class="text-gray-700 whitespace-pre-line mt-1">💬 "${escapeHtml(c.message)}"</p>
+                            <p class="text-[10px] text-gray-400">信箱：${escapeHtml(c.freelancer_email)} | 聯絡方式：${escapeHtml(c.freelancer_contact)}</p>
                         </div>
-                        <p class="text-gray-500">預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
-                        <p class="text-gray-600 line-clamp-1">說明 : ${escapeHtml(p.description)}</p>
+                    `).join('');
+                }
+
+                item.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-gray-200">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-gray-900 text-sm">${escapeHtml(p.title)}</span>
+                                <span class="${isClosed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded font-semibold">${p.status || '招募中'}</span>
+                            </div>
+                            <p class="text-gray-500">預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
+                            <p class="text-gray-600 line-clamp-1">說明 : ${escapeHtml(p.description)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            ${isClosed ? '' : `
+                                <button type="button" class="edit-btn bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm"
+                                    data-id="${p.id}"
+                                    data-title="${escapeHtml(p.title)}"
+                                    data-category="${escapeHtml(p.category)}"
+                                    data-budget="${escapeHtml(p.budget)}"
+                                    data-description="${escapeHtml(p.description)}">
+                                    ✏️ 編輯
+                                </button>
+                                <button onclick="deleteProject(${p.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🗑️ 刪除</button>
+                            `}
+                            ${isClosed ? 
+                                '<span class="text-gray-400 font-bold bg-gray-200 px-3 py-1.5 rounded-lg text-xs">已結案完成</span>' :
+                                `<button onclick="openCloseProjectModal(${p.id}, '${escapeHtml(p.title)}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🔒 我要結案</button>`
+                            }
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        ${isClosed ? '' : `
-                            <button type="button" class="edit-btn bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm"
-                                data-id="${p.id}"
-                                data-title="${escapeHtml(p.title)}"
-                                data-category="${escapeHtml(p.category)}"
-                                data-budget="${escapeHtml(p.budget)}"
-                                data-description="${escapeHtml(p.description)}">
-                                ✏️ 編輯
-                            </button>
-                            <button onclick="deleteProject(${p.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🗑️ 刪除</button>
-                        `}
-                        ${isClosed ? 
-                            '<span class="text-gray-400 font-bold bg-gray-200 px-3 py-1.5 rounded-lg text-xs">已結案完成</span>' :
-                            `<button onclick="openCloseProjectModal(${p.id}, '${escapeHtml(p.title)}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🔒 我要結案</button>`
-                        }
+                    
+                    <div class="space-y-2 bg-amber-50/40 p-3 rounded-lg border border-amber-100">
+                        <p class="font-bold text-gray-800">📥 攝影師應徵留言紀錄 (${projectComments.length})：</p>
+                        <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                            ${commentsHtml}
+                        </div>
                     </div>
                 `;
                 container.appendChild(item);
@@ -1945,13 +2079,15 @@
             fetchProjects();
         }
 
-        function tryApply(title, category, budget, desc, email) {
+        // 🎯 點擊「立即接案應徵」
+        function tryApply(projectId, title, category, budget, desc, email) {
             if (!isLoggedIn) {
                 showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號。', '會員限定');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
 
+            document.getElementById('target-project-id').value = projectId;
             document.getElementById('target-title').value = title;
             document.getElementById('target-budget').value = budget;
             document.getElementById('target-desc').value = desc;
@@ -1961,6 +2097,8 @@
             if (currentUserName) {
                 document.getElementById('apply-name').value = currentUserName;
             }
+            
+            document.getElementById('apply-comment').value = "應徵信件已寄出 如果找不到請在垃圾郵件尋找~感恩";
             
             document.getElementById('apply-modal-subtitle').innerText = `應徵項目：${title} (${budget})`;
             document.getElementById('applyModal').classList.remove('hidden');
@@ -1980,9 +2118,10 @@
             const contact = document.getElementById('apply-contact').value.trim();
             const portfolio = document.getElementById('apply-portfolio').value.trim();
             const message = document.getElementById('apply-message').value.trim();
+            const comment = document.getElementById('apply-comment').value.trim();
 
-            if(!name || !contact || !portfolio) {
-                showCustomAlert('請完整填寫「攝影師/團隊名稱」、「LINE ID 或電話」與「作品集連結(Google雲端) or其他連結」！', '欄位未填');
+            if(!name || !contact || !portfolio || !message || !comment) {
+                showCustomAlert('請完整填寫所有應徵欄位！', '欄位未填');
                 return;
             }
 
@@ -2004,7 +2143,7 @@ ApertureX 光圈X 應徵者來信
 🔗 作品集與社群連結：
 ${portfolio}
 💬 自我介紹 / 報價備註：
-${message || '無'}
+${message}
 --------------------------------------
 ⭐ 合作結束後，歡迎點擊下方連結給予我們評價：
 ${rateLink}
@@ -2021,17 +2160,46 @@ ${rateLink}
             document.getElementById('deviceNoticeModal').classList.add('hidden');
         }
 
-        function copyNoticeTextOnly() {
+        async function saveApplicationComment() {
+            const projectId = document.getElementById('target-project-id').value;
+            const name = document.getElementById('apply-name').value.trim();
+            const contact = document.getElementById('apply-contact').value.trim();
+            const comment = document.getElementById('apply-comment').value.trim();
+
+            if (!projectId || !comment) return;
+
+            await supabaseClient
+                .from('project_comments')
+                .insert([
+                    {
+                        project_id: parseInt(projectId),
+                        freelancer_email: currentUserEmail,
+                        freelancer_name: name,
+                        freelancer_contact: contact,
+                        message: comment,
+                        is_read: false
+                    }
+                ]);
+
+            const { data: comments } = await supabaseClient.from('project_comments').select('*');
+            globalCommentsData = comments || [];
+            renderProjects();
+        }
+
+        async function copyNoticeTextAndComment() {
+            await saveApplicationComment();
             const text = document.getElementById('notice-preview-text').value;
             navigator.clipboard.writeText(text).then(() => {
-                showCustomAlert('✅ 應徵內文已成功複製到剪貼簿！\n\n請前往手機郵件 App 貼上並發送給發案者。', '複製成功');
+                showCustomAlert('✅ 應徵資料已複製，且應徵者留言已成功送出給案主！\n\n請前往手機郵件 App 貼上並發送。', '應徵成功');
                 closeDeviceNoticeModal();
             }).catch(err => {
-                showCustomAlert('複製失敗，請手動長按複製。', '提示');
+                showCustomAlert('應徵留言已送出，但複製到剪貼簿失敗，請手動長按複製。', '提示');
+                closeDeviceNoticeModal();
             });
         }
 
-        function proceedGmailOpen() {
+        async function proceedGmailOpenWithComment() {
+            await saveApplicationComment();
             const text = document.getElementById('notice-preview-text').value;
             const clientEmail = document.getElementById('notice-target-email').value;
             const title = document.getElementById('target-title').value;
@@ -2041,7 +2209,8 @@ ${rateLink}
                 const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${encodeURIComponent('【ApertureX應徵】' + title)}&body=${encodeURIComponent(text)}`;
                 window.open(gmailUrl, '_blank');
             }).catch(err => {
-                showCustomAlert('複製失敗，請手動複製。', '提示');
+                showCustomAlert('應徵留言已送出！', '成功');
+                closeDeviceNoticeModal();
             });
         }
 
