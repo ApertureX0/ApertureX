@@ -41,7 +41,7 @@
             <h1 class="text-xl font-bold tracking-wider cursor-pointer">📸 ApertureX 光圈X</h1>
             <div class="flex items-center gap-4">
                 <div class="text-xs text-gray-400 hidden sm:block">
-                    專業攝影媒合與雲端同步平台
+                    專業攝影師與團隊即時動態
                 </div>
                 <button onclick="openSupportEmail()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1 cursor-pointer">
                     💬 客服中心
@@ -49,6 +49,17 @@
             </div>
         </div>
     </header>
+
+    <!-- 🎉 動態廣播通知列 -->
+    <div class="bg-gradient-to-r from-amber-500 to-orange-600 text-white py-2 px-4 shadow-inner">
+        <div class="max-w-7xl mx-auto flex items-center justify-between text-xs sm:text-sm">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <span class="bg-white/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[11px]">📢 駐站攝影師</span>
+                <p id="broadcast-ticker" class="truncate font-medium transition-all duration-500">正在同步最新駐站攝影師與團隊...</p>
+            </div>
+            <span class="hidden md:inline text-xs text-amber-100">💡 頂尖攝影師熱烈招募中</span>
+        </div>
+    </div>
 
     <!-- 主體內容區 -->
     <div class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -61,17 +72,27 @@
                 
                 <!-- 未登入區塊 -->
                 <div id="login-section">
-                    <p class="text-xs text-gray-500 mb-3">首次登入請輸入稱呼與密碼註冊；之後只需輸入 Email 與密碼即可！</p>
+                    <p class="text-xs text-gray-500 mb-3">首次登入請填寫稱呼與密碼註冊；之後只需輸入 Email 與密碼即可！</p>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 mb-1">登入帳號 (請輸入 Email) <span class="text-red-500">*</span></label>
                             <input type="email" id="login-email" placeholder="your@email.com" onblur="checkUserExist()" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
                         </div>
                         
-                        <!-- 動態顯示的團隊名稱欄位 -->
-                        <div id="name-field-container" class="hidden">
-                            <label class="block text-xs font-semibold text-amber-600 mb-1">✨ 偵測為新帳號，請輸入團隊名稱/稱呼 <span class="text-red-500">*</span></label>
-                            <input type="text" id="login-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-amber-300 bg-amber-50/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <!-- 動態顯示的新帳號註冊欄位 -->
+                        <div id="name-field-container" class="hidden space-y-3 bg-amber-50/50 p-3 rounded-lg border border-amber-200">
+                            <p class="text-xs font-bold text-amber-700">✨ 偵測為新帳號，請完善註冊資料：</p>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">您的身分 <span class="text-red-500">*</span></label>
+                                <select id="reg-role-select" class="w-full text-xs px-3 py-2 border border-amber-300 rounded-lg bg-white font-medium">
+                                    <option value="攝影師/團隊">📷 攝影師 / 團隊 (展示於廣播與排行榜)</option>
+                                    <option value="發案者">📋 發案者 / 案主 (尋找攝影師)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">團隊名稱 / 您的稱呼 <span class="text-red-500">*</span></label>
+                                <input type="text" id="login-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-amber-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
                         </div>
 
                         <div>
@@ -99,7 +120,8 @@
                     <div class="bg-green-50 p-3 rounded-lg border border-green-200">
                         <p class="text-xs text-green-600 font-semibold mb-1">✅ 已登入會員</p>
                         <p id="user-display-name" class="text-sm font-bold text-gray-900"></p>
-                        <p id="user-display-email" class="text-xs text-gray-500 truncate"></p>
+                        <p id="user-display-role" class="text-xs font-semibold text-amber-700 mt-0.5"></p>
+                        <p id="user-display-email" class="text-xs text-gray-500 truncate mt-1"></p>
                     </div>
 
                     <button onclick="openPostModal()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg text-sm font-bold transition shadow-sm cursor-pointer">
@@ -134,10 +156,13 @@
 
             <!-- 🏆 最佳接案者排行榜 -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 class="text-base font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 flex items-center justify-between">
-                    <span>🏆 接案口碑排行榜</span>
-                    <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Top 20</span>
-                </h3>
+                <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+                    <h3 class="text-base font-bold text-gray-900">🏆 口碑排行榜</h3>
+                    <!-- 👥 獨立查看所有攝影師列表按鈕 -->
+                    <button onclick="openAllPhotographersModal()" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded-lg font-bold transition cursor-pointer">
+                        👥 所有攝影師
+                    </button>
+                </div>
                 <p class="text-[11px] text-gray-400 mb-3">💡 點擊下方名單可查看詳細檔案與評價</p>
                 <div id="ranking-container" class="space-y-2 max-h-96 overflow-y-auto pr-1">
                     <p class="text-xs text-gray-400 text-center py-4">載入排行榜中...</p>
@@ -171,6 +196,19 @@
         </main>
     </div>
 
+    <!-- 👥 所有註冊攝影師與團隊獨立列表彈窗 -->
+    <div id="allPhotographersModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
+            <button onclick="closeAllPhotographersModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">👥 所有註冊攝影師與團隊總覽</h3>
+            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">點擊任意攝影師或團隊名稱，即可查看詳細檔案與所有案主評價紀錄。</p>
+            
+            <div id="all-photographers-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
+                <p class="text-xs text-gray-400 text-center py-6">載入攝影師名單中...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- 📂 我的發案管理彈窗 -->
     <div id="myProjectsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
@@ -185,7 +223,7 @@
     </div>
 
     <!-- 🔒 結案時強制評價彈窗 -->
-    <div id="closeProjectRatingModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[99] px-4">
+    <div id="closeProjectRatingModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
             <button onclick="closeCloseProjectRatingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             <h3 class="text-xl font-bold text-gray-900 mb-1">🔒 案件結案與攝影師評價</h3>
@@ -534,8 +572,8 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">應徵內文預覽 (可點擊下方按鈕複製)</label>
-                <textarea id="notice-preview-text" rows="5" readonly class="w-full text-xs bg-gray-50 p-2.5 border border-gray-200 rounded-lg font-mono text-gray-700 select-all"></textarea>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">應徵內文預覽 (含一鍵評價專屬連結)</label>
+                <textarea id="notice-preview-text" rows="6" readonly class="w-full text-xs bg-gray-50 p-2.5 border border-gray-200 rounded-lg font-mono text-gray-700 select-all"></textarea>
             </div>
 
             <input type="hidden" id="notice-target-email">
@@ -646,14 +684,28 @@
         let isLoggedIn = false;
         let currentUserEmail = "";
         let currentUserName = "";
+        let currentUserRole = "";
         let allProjects = [];
         let currentCategory = '全部';
         let freelancerMap = {}; 
         let globalratingsData = [];
+        let broadcastList = [];
+        let broadcastIndex = 0;
+        let globalRankingList = []; // 儲存所有攝影師名單供獨立頁面使用
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchProjects();
             fetchRatingsAndRanking();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const rateEmail = urlParams.get('rate');
+            if (rateEmail) {
+                setTimeout(() => {
+                    document.getElementById('rating-target-email').value = rateEmail;
+                    document.getElementById('ratingModal').classList.remove('hidden');
+                    showCustomAlert(`✨ 系統已自動帶入發案者信箱：\n${rateEmail}\n請為攝影師給予合作評價！`, '快速評價');
+                }, 800);
+            }
             
             const savedEmail = localStorage.getItem('lensmatch_saved_email');
             const savedPass = localStorage.getItem('lensmatch_saved_pass');
@@ -701,6 +753,48 @@
             window.open(gmailUrl, '_blank');
         }
 
+        // 👥 開啟「所有註冊攝影師與團隊」獨立列表彈窗
+        function openAllPhotographersModal() {
+            const container = document.getElementById('all-photographers-container');
+            container.innerHTML = '';
+
+            if (!globalRankingList || globalRankingList.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">目前尚無註冊攝影師資料。</p>';
+            } else {
+                globalRankingList.forEach((item, index) => {
+                    const displayScore = item.count > 0 ? `★ ${item.avg} (${item.count}則評價)` : '尚未評價';
+                    const scoreColor = item.count > 0 ? 'text-amber-600 font-bold' : 'text-gray-400 text-[11px]';
+
+                    const row = document.createElement('div');
+                    row.className = "p-3 bg-gray-50 hover:bg-amber-50 rounded-xl border border-gray-200 text-xs flex justify-between items-center cursor-pointer transition";
+                    row.onclick = () => {
+                        closeAllPhotographersModal();
+                        openDetailModal(item.email, item.name);
+                    };
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-gray-500 w-6">#${index + 1}</span>
+                            <div>
+                                <p class="font-bold text-gray-900 text-sm hover:text-amber-600 underline">${escapeHtml(item.name)}</p>
+                                <p class="text-[11px] text-gray-400">信箱：${maskEmail(item.email)}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="${scoreColor} text-sm">${displayScore}</span>
+                            <p class="text-[10px] text-amber-600 underline mt-0.5">點擊查看詳細檔案 📂</p>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            document.getElementById('allPhotographersModal').classList.remove('hidden');
+        }
+
+        function closeAllPhotographersModal() {
+            document.getElementById('allPhotographersModal').classList.add('hidden');
+        }
+
         async function checkUserExist() {
             const emailInput = document.getElementById('login-email').value.trim();
             const nameContainer = document.getElementById('name-field-container');
@@ -731,6 +825,7 @@
             const emailInput = document.getElementById('login-email').value.trim();
             const passwordInput = document.getElementById('login-password').value.trim();
             const nameInput = document.getElementById('login-name').value.trim();
+            const roleSelect = document.getElementById('reg-role-select').value;
             const nameContainer = document.getElementById('name-field-container');
             const rememberMe = document.getElementById('remember-me').checked;
 
@@ -756,15 +851,24 @@
                         return;
                     }
                     currentUserEmail = existingUser.email;
-                    currentUserName = existingUser.name;
+                    currentUserName = existingUser.name || existingUser.services || existingUser.email.split('@')[0];
+                    currentUserRole = existingUser.role || '攝影師/團隊';
 
                     proceedLoginSuccess(rememberMe, passwordInput);
                 } else {
                     if (!nameInput) {
-                        showCustomAlert('偵測為新帳號，請務必填寫「團隊名稱 / 攝影師稱呼」來完成註冊！', '資料未填');
+                        showCustomAlert('偵測為新帳號，請務必選擇身分並填寫「團隊名稱/稱呼」來完成註冊！', '資料未填');
                         nameContainer.classList.remove('hidden');
                         return;
                     }
+
+                    window.pendingNewUser = {
+                        email: emailInput,
+                        password: passwordInput,
+                        name: nameInput,
+                        role: roleSelect,
+                        rememberMe: rememberMe
+                    };
 
                     document.getElementById('registerDisclaimerModal').classList.remove('hidden');
                 }
@@ -776,31 +880,42 @@
 
         function acceptDisclaimerAndOpenProfile() {
             document.getElementById('registerDisclaimerModal').classList.add('hidden');
-            document.getElementById('registerProfileModal').classList.remove('hidden');
+            
+            if (window.pendingNewUser && window.pendingNewUser.role === '攝影師/團隊') {
+                document.getElementById('registerProfileModal').classList.remove('hidden');
+            } else {
+                finalizeNewUserRegistration();
+            }
         }
 
-        async function submitRegisterProfile() {
-            const emailInput = document.getElementById('login-email').value.trim();
-            const passwordInput = document.getElementById('login-password').value.trim();
-            const nameInput = document.getElementById('login-name').value.trim();
-            const rememberMe = document.getElementById('remember-me').checked;
+        async function finalizeNewUserRegistration() {
+            const u = window.pendingNewUser;
+            if (!u) return;
 
-            let services = document.getElementById('reg-services').value.trim();
-            const portfolio = document.getElementById('reg-portfolio').value.trim();
-            let ig = document.getElementById('reg-ig').value.trim();
-            const fb = document.getElementById('reg-fb').value.trim();
+            let services = "";
+            let portfolio = "";
+            let ig = "";
+            let fb = "";
 
-            if (ig && !ig.startsWith('http://') && !ig.startsWith('https://')) {
-                const cleanIg = ig.replace('@', '').trim();
-                ig = `https://instagram.com/${cleanIg}`;
+            if (u.role === '攝影師/團隊') {
+                services = document.getElementById('reg-services').value.trim();
+                portfolio = document.getElementById('reg-portfolio').value.trim();
+                ig = document.getElementById('reg-ig').value.trim();
+                fb = document.getElementById('reg-fb').value.trim();
+
+                if (ig && !ig.startsWith('http://') && !ig.startsWith('https://')) {
+                    const cleanIg = ig.replace('@', '').trim();
+                    ig = `https://instagram.com/${cleanIg}`;
+                }
             }
 
             const { error: insertError } = await supabaseClient
                 .from('users')
                 .insert([{ 
-                    email: emailInput, 
-                    name: nameInput, 
-                    password: passwordInput,
+                    email: u.email, 
+                    name: u.name, 
+                    password: u.password,
+                    role: u.role,
                     services: services,
                     portfolio: portfolio,
                     ig: ig,
@@ -812,13 +927,25 @@
                 return;
             }
 
-            currentUserEmail = emailInput;
-            currentUserName = nameInput;
+            currentUserEmail = u.email;
+            currentUserName = u.name;
+            currentUserRole = u.role;
+
             document.getElementById('registerProfileModal').classList.add('hidden');
             
-            showCustomAlert('🎉 帳號註冊成功並已建立工作室檔案！', '歡迎加入');
+            fetchRatingsAndRanking();
 
-            proceedLoginSuccess(rememberMe, passwordInput);
+            if (u.role === '攝影師/團隊') {
+                showCustomAlert(`🎉 歡迎新攝影師/團隊【${u.name}】加入 ApertureX 光圈X！`, '註冊成功');
+            } else {
+                showCustomAlert(`🎉 歡迎發案者【${u.name}】加入 ApertureX 光圈X！`, '註冊成功');
+            }
+
+            proceedLoginSuccess(u.rememberMe, u.password);
+        }
+
+        async function submitRegisterProfile() {
+            await finalizeNewUserRegistration();
         }
 
         function proceedLoginSuccess(rememberMe, passwordInput) {
@@ -835,6 +962,7 @@
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('user-info-section').classList.remove('hidden');
             document.getElementById('user-display-name').innerText = currentUserName;
+            document.getElementById('user-display-role').innerText = `身分：${currentUserRole || '攝影師/團隊'}`;
             document.getElementById('user-display-email').innerText = currentUserEmail;
             document.getElementById('hall-status-tip').innerText = "已解鎖完整應徵權限";
             document.getElementById('hall-status-tip').className = "text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold";
@@ -842,6 +970,35 @@
             document.getElementById('apply-name').value = currentUserName;
             renderProjects();
             fetchRatingsAndRanking();
+        }
+
+        // 🎯 專屬跑馬燈更新：直接同步所有攝影師與團隊名單進行前 10 位輪播
+        function updateBroadcastFromRanking(rankingList) {
+            broadcastList = [];
+            if (rankingList && rankingList.length > 0) {
+                rankingList.slice(0, 10).forEach(item => {
+                    let ratingText = item.count > 0 ? `(平均評分 ★ ${item.avg})` : `(新進駐實力派)`;
+                    broadcastList.push(`🎉 駐站優秀攝影師/團隊：【${item.name}】 ${ratingText} 熱烈接案中！`);
+                });
+            } else {
+                broadcastList.push("🎉 歡迎來到 ApertureX 光圈X 專業攝影師媒合平台！");
+                broadcastList.push("💡 案主可隨時發布商業攝影、活動紀錄、婚禮紀錄等拍攝案件！");
+            }
+            startBroadcastTicker();
+        }
+
+        function startBroadcastTicker() {
+            const ticker = document.getElementById('broadcast-ticker');
+            if (!ticker || broadcastList.length === 0) return;
+
+            broadcastIndex = 0;
+            ticker.innerText = broadcastList[broadcastIndex];
+            
+            if (window.broadcastTimer) clearInterval(window.broadcastTimer);
+            window.broadcastTimer = setInterval(() => {
+                broadcastIndex = (broadcastIndex + 1) % broadcastList.length;
+                ticker.innerText = broadcastList[broadcastIndex];
+            }, 4000);
         }
 
         // ⚙️ 開啟修改資料與密碼彈窗
@@ -853,7 +1010,7 @@
                 .single();
 
             if (user) {
-                document.getElementById('edit-name').value = user.name || '';
+                document.getElementById('edit-name').value = user.name || user.services || '';
                 document.getElementById('edit-services').value = user.services || '';
                 document.getElementById('edit-portfolio').value = user.portfolio || '';
                 document.getElementById('edit-ig').value = user.ig || '';
@@ -924,6 +1081,7 @@
             isLoggedIn = false;
             currentUserEmail = "";
             currentUserName = "";
+            currentUserRole = "";
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('user-info-section').classList.add('hidden');
             document.getElementById('login-password').value = '';
@@ -982,7 +1140,7 @@
 
             const templateParams = {
                 to_email: email,
-                to_name: user.name,
+                to_name: user.name || user.services || '會員',
                 temp_password: tempPassword,
                 message: `您的 ApertureX 平台新臨時密碼為：${tempPassword}，請盡快登入並修改密碼。`
             };
@@ -1014,41 +1172,57 @@
 
             const rankingContainer = document.getElementById('ranking-container');
 
-            if (error || !ratings || ratings.length === 0) {
-                rankingContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">目前尚無排行榜資料</p>';
-                return;
+            let stats = {};
+            if (usersData) {
+                usersData.forEach(u => {
+                    const email = u.email;
+                    const name = u.name || u.services || email.split('@')[0];
+                    stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
+                });
             }
 
-            globalratingsData = ratings;
+            if (ratings && ratings.length > 0) {
+                globalratingsData = ratings;
+                ratings.forEach(r => {
+                    const email = r.freelancer_email || '未知信箱';
+                    let name = r.freelancer_name;
+                    
+                    if (freelancerMap[email] && (freelancerMap[email].name || freelancerMap[email].services)) {
+                        name = freelancerMap[email].name || freelancerMap[email].services;
+                    } else if (!name || name === email) {
+                        name = email.split('@')[0];
+                    }
 
-            let stats = {};
-            ratings.forEach(r => {
-                const email = r.freelancer_email || '未知信箱';
-                let name = r.freelancer_name;
-                
-                if (freelancerMap[email] && freelancerMap[email].name) {
-                    name = freelancerMap[email].name;
-                } else if (!name || name === email) {
-                    name = email.split('@')[0];
-                }
-
-                if (!stats[email]) {
-                    stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
-                }
-                stats[email].totalScore += Number(r.rating_score);
-                stats[email].count += 1;
-            });
+                    if (!stats[email]) {
+                        stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
+                    }
+                    stats[email].totalScore += Number(r.rating_score);
+                    stats[email].count += 1;
+                });
+            }
 
             let rankingList = Object.keys(stats).map(email => {
+                const count = stats[email].count;
                 return {
                     email: email,
                     name: stats[email].name,
-                    avg: (stats[email].totalScore / stats[email].count).toFixed(1),
-                    count: stats[email].count
+                    avg: count > 0 ? (stats[email].totalScore / count).toFixed(1) : "尚無評價",
+                    numericAvg: count > 0 ? (stats[email].totalScore / count) : 0,
+                    count: count
                 };
             });
 
-            rankingList.sort((a, b) => b.avg - a.avg || b.count - a.count);
+            rankingList.sort((a, b) => b.numericAvg - a.numericAvg || b.count - a.count);
+
+            // 儲存全域名單供彈窗使用
+            globalRankingList = rankingList;
+
+            updateBroadcastFromRanking(rankingList);
+
+            if (rankingList.length === 0) {
+                rankingContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">目前尚無排行榜資料</p>';
+                return;
+            }
 
             rankingContainer.innerHTML = '';
             rankingList.slice(0, 20).forEach((item, index) => {
@@ -1056,6 +1230,9 @@
                 if(index === 0) medal = '🥇';
                 if(index === 1) medal = '🥈';
                 if(index === 2) medal = '🥉';
+
+                const displayScore = item.count > 0 ? `★ ${item.avg}` : '尚未評價';
+                const scoreColor = item.count > 0 ? 'text-amber-600' : 'text-gray-400 text-[11px]';
 
                 const rankItem = document.createElement('div');
                 rankItem.className = "flex items-center justify-between p-2.5 bg-gray-50 hover:bg-amber-50 rounded-lg border border-gray-100 text-xs cursor-pointer transition";
@@ -1069,7 +1246,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="font-extrabold text-amber-600 text-sm">★ ${item.avg}</span>
+                        <span class="font-extrabold ${scoreColor} text-sm">${displayScore}</span>
                     </div>
                 `;
                 rankingContainer.appendChild(rankItem);
@@ -1205,7 +1382,7 @@
                 return;
             }
 
-            const targetName = (freelancerMap[targetEmail] && freelancerMap[targetEmail].name) || targetEmail.split('@')[0];
+            const targetName = (freelancerMap[targetEmail] && (freelancerMap[targetEmail].services || freelancerMap[targetEmail].name)) || targetEmail.split('@')[0];
 
             const { error } = await supabaseClient
                 .from('ratings')
@@ -1404,13 +1581,13 @@
             document.getElementById('closing-project-id').value = projectId;
             document.getElementById('close-project-subtitle').innerText = `結案案件：${projectTitle}`;
             document.getElementById('closing-freelancer-email').value = '';
-            closeMyProjectsModal(); // 關閉列表
-            document.getElementById('closeProjectRatingModal').classList.remove('hidden'); // 打開結案評價
+            closeMyProjectsModal();
+            document.getElementById('closeProjectRatingModal').classList.remove('hidden');
         }
 
         function closeCloseProjectRatingModal() {
             document.getElementById('closeProjectRatingModal').classList.add('hidden');
-            openMyProjectsModal(); // 再次打開列表
+            openMyProjectsModal();
         }
 
         function setClosingRating(score) {
@@ -1444,8 +1621,7 @@
                 return;
             }
 
-            // 1. 新增評價至 ratings 表格
-            const targetName = (freelancerMap[targetEmail] && freelancerMap[targetEmail].name) || targetEmail.split('@')[0];
+            const targetName = (freelancerMap[targetEmail] && (freelancerMap[targetEmail].services || freelancerMap[targetEmail].name)) || targetEmail.split('@')[0];
             const { error: ratingError } = await supabaseClient
                 .from('ratings')
                 .insert([
@@ -1463,7 +1639,6 @@
                 return;
             }
 
-            // 2. 將專案狀態更新為「已結案」
             const { error: projectError } = await supabaseClient
                 .from('projects')
                 .update({ status: '已結案' })
@@ -1486,7 +1661,6 @@
                 showCustomAlert('請先在左側登入帳號再發案！', '會員限定');
                 return;
             }
-            document.getElementById('postModal').classList.add('hidden'); // 確保安全
             document.getElementById('postModal').classList.remove('hidden');
         }
         function closePostModal() { document.getElementById('postModal').classList.add('hidden'); }
@@ -1570,6 +1744,9 @@
                 return;
             }
 
+            const currentBaseUrl = window.location.href.split('?')[0];
+            const rateLink = `${currentBaseUrl}?rate=${encodeURIComponent(currentUserEmail)}`;
+
             const formattedText = 
 `發案者 Email: ${clientEmail}
 
@@ -1586,6 +1763,9 @@ ApertureX 光圈X 應徵者來信
 ${portfolio}
 💬 自我介紹 / 報價備註：
 ${message || '無'}
+--------------------------------------
+⭐ 合作結束後，歡迎點擊下方連結給予我們評價：
+${rateLink}
 --------------------------------------`;
 
             document.getElementById('notice-preview-text').value = formattedText;
@@ -1605,7 +1785,7 @@ ${message || '無'}
                 showCustomAlert('✅ 應徵內文已成功複製到剪貼簿！\n\n請前往您的手機郵件 App 貼上並發送給發案者。', '複製成功');
                 closeDeviceNoticeModal();
             }).catch(err => {
-                showCustomAlert('複製失敗，請手動長按框選複製。', '提示');
+                showCustomAlert('複製失敗，請手動長按複製。', '提示');
             });
         }
 
