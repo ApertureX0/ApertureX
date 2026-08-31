@@ -253,7 +253,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$) <span class="text-red-500">*</span></label>
-                        <input type="text" id="edit-project-budget" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                        <input type="text" id="edit-project-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div>
@@ -443,7 +443,8 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$)</label>
-                        <input type="text" id="post-budget" placeholder="5,000 - 8,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                        <!-- 🎯 修正為 blur（離開輸入框時才格式化），徹底解決打 3000 變成 30,000 的問題 -->
+                        <input type="text" id="post-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3000 或 3000~5000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div>
@@ -785,6 +786,25 @@
                 checkUserExist();
             }
         });
+
+        // 💡 支援固定金額或範圍金額 (如 3,000~5,000) 於離開輸入框(blur)時自動加上千分位逗點
+        function formatCurrencyInput(input) {
+            let val = input.value.trim();
+            if (!val) return;
+
+            let parts = val.split(/[~～\-]/);
+            if (parts.length > 1) {
+                let formattedParts = parts.map(p => {
+                    let num = p.replace(/[^\d]/g, '');
+                    return num !== '' ? Number(num).toLocaleString('en-US') : '';
+                });
+                let separator = val.includes('~') ? '~' : (val.includes('～') ? '～' : '-');
+                input.value = formattedParts.join(separator);
+            } else {
+                let num = val.replace(/[^\d]/g, '');
+                input.value = num !== '' ? Number(num).toLocaleString('en-US') : '';
+            }
+        }
 
         // 💡 快速代入發案範本功能（地點 / 日期 / 工作內容）
         function insertProjectTemplate(elementId) {
@@ -1243,7 +1263,7 @@
             btn.disabled = true;
 
             const templateParams = {
-                to_email: email,
+                to_email: email, // 💡 確保這裡正確對應使用者輸入的註冊信箱
                 to_name: user.name || user.services || '會員',
                 temp_password: tempPassword,
                 message: `您的 ApertureX 平台新臨時密碼為：${tempPassword}，請盡快登入並修改密碼。`
@@ -1690,7 +1710,6 @@
                 const item = document.createElement('div');
                 item.className = "p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3";
                 
-                // 💡 使用資料屬性 (data-*) 確保不管標題有任何引號或特殊符號，編輯按鈕都能完美點開！
                 item.innerHTML = `
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -1721,7 +1740,6 @@
                 container.appendChild(item);
             });
 
-            // 🎯 為動態產生的編輯按鈕綁定安全的點擊事件
             container.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => {
                     openEditProjectModal(
