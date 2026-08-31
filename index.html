@@ -173,14 +173,13 @@
         <!-- 中間：即時聊天大廳 + 案件大廳 -->
         <main class="md:col-span-3 space-y-6">
             
-            <!-- 💬 會員即時聊天大廳區塊 (自動保留最新50則訊息) -->
+            <!-- 💬 會員即時聊天大廳區塊 -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
-                        <span>💬 會員即時聊天大廳</span>
-                        <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">🟢 線上即時同步 (上限50則)</span>
+                <div class="flex justify-between items-center border-b pb-2 flex-wrap gap-2">
+                    <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block animate-pulse shrink-0"></span>
+                        <span>會員即時聊天大廳江湖救急 有問題就問 攝影交流</span>
                     </h3>
-                    <span class="text-xs text-gray-400">交流攝影技巧、案源與經驗分享</span>
                 </div>
 
                 <!-- 訊息顯示框 -->
@@ -844,7 +843,7 @@
             }
         });
 
-        // 💬 會員即時聊天大廳功能 (自動保留最新50則訊息，超過則自動刪除最舊的)
+        // 💬 會員即時聊天大廳功能 (自動保留最新50則訊息)
         async function fetchChatMessages() {
             const chatBox = document.getElementById('chat-messages-box');
             const { data: messages, error } = await supabaseClient
@@ -901,7 +900,6 @@
             const text = input.value.trim();
             if (!text) return;
 
-            // 發送新訊息
             const { error } = await supabaseClient
                 .from('global_chat')
                 .insert([
@@ -920,7 +918,7 @@
 
             input.value = '';
 
-            // 🎯 超過50則自動刪除最舊的訊息
+            // 超過50則自動刪除最舊的訊息
             const { data: allMsgs } = await supabaseClient
                 .from('global_chat')
                 .select('id, created_at')
@@ -1688,7 +1686,7 @@
                 if (userProfile.fb && userProfile.fb.trim() !== "") combinedText += `FB：${userProfile.fb}`;
 
                 if (combinedText.trim() === "") {
-                    showCustomAlert('⚠️ 您的帳號尚未在個人資料中填寫任何連結，請先至會員中心「修改資料」補填！', '提示');
+                    showCustomAlert('⚠️ 您的帳號尚未在個人資料中填寫任何連結，請先至左側「修改資料」補填！', '提示');
                 } else {
                     portfolioInput.value = combinedText.trim();
                 }
