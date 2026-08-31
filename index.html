@@ -257,8 +257,13 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">詳細說明與要求 <span class="text-red-500">*</span></label>
-                    <textarea id="edit-project-desc" rows="3" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-gray-600">詳細說明與要求 <span class="text-red-500">*</span></label>
+                        <button type="button" onclick="insertProjectTemplate('edit-project-desc')" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
+                            ✨ 快速代入範本
+                        </button>
+                    </div>
+                    <textarea id="edit-project-desc" rows="4" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button onclick="closeEditProjectModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
@@ -442,11 +447,16 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">詳細說明與要求</label>
-                    <textarea id="post-desc" rows="3" placeholder="請簡述拍攝需求與地點..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-gray-600">詳細說明與要求</label>
+                        <button type="button" onclick="insertProjectTemplate('post-desc')" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
+                            ✨ 快速代入範本
+                        </button>
+                    </div>
+                    <textarea id="post-desc" rows="4" placeholder="請簡述拍攝需求與地點..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button onclick="closePostModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition cursor-pointer text-xs">
+                    <button onclick="closePostModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition cursor-pointer text-xs">
                         🔙 返回
                     </button>
                     <button onclick="submitNewProject()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md cursor-pointer">
@@ -545,7 +555,7 @@
                 2. 本平台不保證所有資訊之完全真實性與正確性，使用者在進行線上或線下交易時，應自行評估風險並進行查證。</p>
 
                 <p><strong>三、系統服務與中斷</strong><br>
-                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫、電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
+                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫,電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
 
                 <p><strong>四、帳號安全與隱私</strong><br>
                 使用者有義務妥善保管自身之帳號與密碼。建議切勿使用與其他重要金融帳號相同之密碼，以維護帳號安全。</p>
@@ -702,7 +712,13 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">簡短自介 / 報價備註</label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-gray-600">簡短自介 / 報價備註</label>
+                        <!-- 🎯 按鈕已正確綁定一鍵代入個人簡介 -->
+                        <button type="button" onclick="insertMyProfileIntro()" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
+                            ✨ 一鍵代入個人簡介
+                        </button>
+                    </div>
                     <textarea id="apply-message" rows="3" placeholder="例如：有 3 年商業攝影經驗..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
                 </div>
                 
@@ -770,6 +786,41 @@
                 checkUserExist();
             }
         });
+
+        // 💡 快速代入發案範本功能（地點 / 日期 / 工作內容）
+        function insertProjectTemplate(elementId) {
+            const templateText = 
+`【拍攝地點】：
+【拍攝日期】：
+【工作內容與需求】：`;
+            
+            const target = document.getElementById(elementId);
+            if (target) {
+                target.value = templateText;
+                target.focus();
+            }
+        }
+
+        // 🎯 一鍵代入登入中攝影師在會員中心填寫的個人簡介
+        async function insertMyProfileIntro() {
+            if (!currentUserEmail) {
+                showCustomAlert('⚠️ 請先登入會員，才可使用一鍵代入個人簡介！', '提示');
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('email', currentUserEmail)
+                .maybeSingle();
+
+            if (user && user.services) {
+                document.getElementById('apply-message').value = user.services;
+                showCustomAlert('✅ 已成功代入您的個人簡介！', '代入成功');
+            } else {
+                showCustomAlert('⚠️ 您尚未在會員中心填寫「服務項目與個人介紹」，請先至左側「修改資料」補填！', '尚未填寫');
+            }
+        }
 
         // 🚨 手機友善的自定義警告視窗取代 alert
         function showCustomAlert(message, title = "系統提示") {
@@ -1811,7 +1862,7 @@
 
         function openPostModal() {
             if (!isLoggedIn) {
-                showCustomAlert('請先在左側登入帳號再發案！', '會員限定');
+                showCustomAlert('請先在左側會員中心登入帳號再發案！', '會員限定');
                 return;
             }
             document.getElementById('postModal').classList.remove('hidden');
