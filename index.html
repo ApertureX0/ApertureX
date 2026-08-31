@@ -555,7 +555,7 @@
                 2. 本平台不保證所有資訊之完全真實性與正確性，使用者在進行線上或線下交易時，應自行評估風險並進行查證。</p>
 
                 <p><strong>三、系統服務與中斷</strong><br>
-                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫,電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
+                本平台可能因系統維護、軟硬體設備故障或第三方服務（如雲端資料庫、電子郵件發送服務）異常而導致服務中斷。對於因此所造成之不便或資料遺失，本平台不負任何賠償責任。</p>
 
                 <p><strong>四、帳號安全與隱私</strong><br>
                 使用者有義務妥善保管自身之帳號與密碼。建議切勿使用與其他重要金融帳號相同之密碼，以維護帳號安全。</p>
@@ -714,7 +714,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-semibold text-gray-600">簡短自介 / 報價備註</label>
-                        <!-- 🎯 按鈕已正確綁定一鍵代入個人簡介 -->
                         <button type="button" onclick="insertMyProfileIntro()" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
                             ✨ 一鍵代入個人簡介
                         </button>
@@ -1691,6 +1690,7 @@
                 const item = document.createElement('div');
                 item.className = "p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3";
                 
+                // 💡 使用資料屬性 (data-*) 確保不管標題有任何引號或特殊符號，編輯按鈕都能完美點開！
                 item.innerHTML = `
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -1702,7 +1702,14 @@
                     </div>
                     <div class="flex items-center gap-2">
                         ${isClosed ? '' : `
-                            <button onclick="openEditProjectModal(${p.id}, '${escapeHtml(p.title)}', '${escapeHtml(p.category)}', '${escapeHtml(p.budget)}', '${escapeHtml(p.description)}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">✏️ 編輯</button>
+                            <button type="button" class="edit-btn bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm"
+                                data-id="${p.id}"
+                                data-title="${escapeHtml(p.title)}"
+                                data-category="${escapeHtml(p.category)}"
+                                data-budget="${escapeHtml(p.budget)}"
+                                data-description="${escapeHtml(p.description)}">
+                                ✏️ 編輯
+                            </button>
                             <button onclick="deleteProject(${p.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🗑️ 刪除</button>
                         `}
                         ${isClosed ? 
@@ -1712,6 +1719,19 @@
                     </div>
                 `;
                 container.appendChild(item);
+            });
+
+            // 🎯 為動態產生的編輯按鈕綁定安全的點擊事件
+            container.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.onclick = () => {
+                    openEditProjectModal(
+                        btn.dataset.id,
+                        btn.dataset.title,
+                        btn.dataset.category,
+                        btn.dataset.budget,
+                        btn.dataset.description
+                    );
+                };
             });
         }
 
