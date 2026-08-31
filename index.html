@@ -596,10 +596,12 @@
             <h3 class="text-xl font-bold text-gray-900 mb-1">👤 攝影師 / 團隊專屬檔案</h3>
             <p id="detail-modal-subtitle" class="text-xs text-amber-600 font-bold mb-3 pb-2 border-b border-gray-100"></p>
             
-            <!-- 個人檔案資訊區塊 -->
+            <!-- 個人檔案資訊區塊 (改成點擊開啟 YouTube 觀看按鈕以徹底避免錯誤 153) -->
             <div id="freelancer-profile-card" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4 space-y-2 text-xs">
                 <p><strong>🎯 服務項目與個人介紹：</strong></p>
-                <p id="profile-services" class="text-gray-700 font-medium whitespace-pre-line bg-white p-3 rounded-lg border border-amber-100">未填寫</p>
+                <div class="max-h-60 overflow-y-auto pr-1">
+                    <div id="profile-services" class="text-gray-700 font-medium whitespace-pre-line bg-white p-3 rounded-lg border border-amber-100 space-y-3">未填寫</div>
+                </div>
                 <div class="flex flex-wrap gap-3 pt-2">
                     <a id="profile-portfolio" href="#" target="_blank" class="hidden bg-gray-900 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-gray-800 transition">📂 作品集連結</a>
                     <a id="profile-ig" href="#" target="_blank" class="hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition">📸 Instagram</a>
@@ -705,7 +707,7 @@
                 </div>
                 
                 <div class="flex gap-2 pt-2">
-                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition cursor-pointer text-xs">
+                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition cursor-pointer text-xs">
                         🔙 返回
                     </button>
                     <button onclick="showDeviceNoticeModal()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
@@ -1303,16 +1305,51 @@
             });
         }
 
+        // 💡 智慧解析文字中的網址：將 YouTube 轉為安全且美觀的「前往 YouTube 觀看」按鈕卡片，其餘轉為藍色超連結
+        function parseTextWithLinks(text) {
+            if (!text) return "未填寫";
+            
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const parts = text.split(urlRegex);
+            
+            return parts.map(part => {
+                if (!part) return '';
+                if (part.match(urlRegex)) {
+                    let url = part;
+                    let ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                    if (ytMatch && ytMatch[1]) {
+                        let cleanUrl = escapeHtml(url);
+                        // 改成美觀的觀看按鈕卡片，徹底解決錯誤 153
+                        return `<div class="my-2 p-3 bg-gray-900 text-white rounded-xl flex items-center justify-between gap-2 shadow-sm">
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                <span class="text-red-500 text-lg">▶️</span>
+                                <span class="text-xs truncate font-medium">YouTube 影音作品</span>
+                            </div>
+                            <a href="${cleanUrl}" target="_blank" class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shrink-0">
+                                觀看影片 ↗
+                            </a>
+                        </div>`;
+                    } else {
+                        let cleanUrl = escapeHtml(url);
+                        return `<a href="${cleanUrl}" target="_blank" class="text-blue-600 hover:underline font-semibold break-all">${cleanUrl}</a>`;
+                    }
+                } else {
+                    return escapeHtml(part);
+                }
+            }).join('');
+        }
+
         function openDetailModal(email, name) {
             document.getElementById('detail-modal-subtitle').innerText = `攝影師 / 團隊：${name}`;
             
             const userProfile = freelancerMap[email] || {};
-            const servicesSpan = document.getElementById('profile-services');
+            const servicesContainer = document.getElementById('profile-services');
             const portfolioBtn = document.getElementById('profile-portfolio');
             const igBtn = document.getElementById('profile-ig');
             const fbBtn = document.getElementById('profile-fb');
 
-            servicesSpan.innerText = userProfile.services || "尚未填寫服務項目與個人介紹";
+            const rawServices = userProfile.services || "尚未填寫服務項目與個人介紹";
+            servicesContainer.innerHTML = parseTextWithLinks(rawServices);
 
             if (userProfile.portfolio && userProfile.portfolio.trim() !== "") {
                 portfolioBtn.href = userProfile.portfolio;
@@ -1632,7 +1669,6 @@
             document.getElementById('myProjectsModal').classList.add('hidden');
         }
 
-        // 🗑️ 刪除發布中的案件
         async function deleteProject(id) {
             if (!confirm('確定要永久刪除這個案件嗎？刪除後無法復原。')) {
                 return;
@@ -1649,11 +1685,10 @@
             }
 
             showCustomAlert('🗑️ 案件已成功刪除！', '刪除成功');
-            openMyProjectsModal(); // 重新整理發案管理清單
-            fetchProjects(); // 重新整理大廳
+            openMyProjectsModal();
+            fetchProjects();
         }
 
-        // ✏️ 開啟與關閉編輯案件彈窗
         function openEditProjectModal(id, title, category, budget, description) {
             document.getElementById('edit-project-id').value = id;
             document.getElementById('edit-project-title').value = title;
@@ -1670,7 +1705,6 @@
             openMyProjectsModal();
         }
 
-        // 💾 提交編輯後的案件內容至 Supabase
         async function submitEditProject() {
             const id = document.getElementById('edit-project-id').value;
             const title = document.getElementById('edit-project-title').value.trim();
@@ -1698,7 +1732,6 @@
             fetchProjects();
         }
 
-        // 🔒 開啟結案評價彈窗
         function openCloseProjectModal(projectId, projectTitle) {
             document.getElementById('closing-project-id').value = projectId;
             document.getElementById('close-project-subtitle').innerText = `結案案件：${projectTitle}`;
@@ -1726,7 +1759,6 @@
             });
         }
 
-        // 🔒 提交結案與評價
         async function submitProjectCloseAndRating() {
             const projectId = document.getElementById('closing-project-id').value;
             const targetEmail = document.getElementById('closing-freelancer-email').value.trim().toLowerCase();
