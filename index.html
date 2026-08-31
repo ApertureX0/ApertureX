@@ -67,7 +67,7 @@
         <!-- 左側：會員中心 + 評價專區 + 排行榜 -->
         <aside class="md:col-span-1 space-y-6">
             <!-- 會員中心卡片 -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit sticky top-20">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">🔐 會員中心</h2>
                 
                 <!-- 未登入區塊 -->
@@ -596,7 +596,7 @@
             <h3 class="text-xl font-bold text-gray-900 mb-1">👤 攝影師 / 團隊專屬檔案</h3>
             <p id="detail-modal-subtitle" class="text-xs text-amber-600 font-bold mb-3 pb-2 border-b border-gray-100"></p>
             
-            <!-- 個人檔案資訊區塊 (改成點擊開啟 YouTube 觀看按鈕以徹底避免錯誤 153) -->
+            <!-- 個人檔案資訊區塊 -->
             <div id="freelancer-profile-card" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4 space-y-2 text-xs">
                 <p><strong>🎯 服務項目與個人介紹：</strong></p>
                 <div class="max-h-60 overflow-y-auto pr-1">
@@ -1305,7 +1305,7 @@
             });
         }
 
-        // 💡 智慧解析文字中的網址：將 YouTube 轉為安全且美觀的「前往 YouTube 觀看」按鈕卡片，其餘轉為藍色超連結
+        // 💡 智慧解析文字中的網址：將 YouTube 轉為美觀的「前往觀看影片」按鈕卡片
         function parseTextWithLinks(text) {
             if (!text) return "未填寫";
             
@@ -1319,7 +1319,6 @@
                     let ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
                     if (ytMatch && ytMatch[1]) {
                         let cleanUrl = escapeHtml(url);
-                        // 改成美觀的觀看按鈕卡片，徹底解決錯誤 153
                         return `<div class="my-2 p-3 bg-gray-900 text-white rounded-xl flex items-center justify-between gap-2 shadow-sm">
                             <div class="flex items-center gap-2 overflow-hidden">
                                 <span class="text-red-500 text-lg">▶️</span>
@@ -1647,8 +1646,8 @@
                             <span class="font-bold text-gray-900 text-sm">${escapeHtml(p.title)}</span>
                             <span class="${isClosed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded font-semibold">${p.status || '招募中'}</span>
                         </div>
-                        <p class="text-gray-500">預算：NT$ ${escapeHtml(p.budget)} | 類別：${escapeHtml(p.category)}</p>
-                        <p class="text-gray-600 line-clamp-1">說明：${escapeHtml(p.description)}</p>
+                        <p class="text-gray-500">預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
+                        <p class="text-gray-600 line-clamp-1">說明 : ${escapeHtml(p.description)}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         ${isClosed ? '' : `
