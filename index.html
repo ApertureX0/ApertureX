@@ -625,130 +625,6 @@
         </div>
     </div>
 
-    <!-- 📱 裝置提示與確認彈窗 (用於寄信與送出應徵) -->
-    <div id="deviceNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <span>📱 寄信與應徵確認</span>
-            </h3>
-            <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 leading-relaxed space-y-2">
-                <p><b>貼心提醒：</b>點擊下方按鈕後，系統會<b>自動將您的應徵留言送至案主的發案管理後台</b>，並為您開啟 Gmail 寄信！</p>
-                <p><b>手機版用戶：</b>如果是用手機版本，請按下「一鍵複製」，自行前往郵件 APP 手動寄出資訊！</p>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">應徵內文預覽 (含一鍵評價專屬連結)</label>
-                <textarea id="notice-preview-text" rows="6" readonly class="w-full text-xs bg-gray-50 p-2.5 border border-gray-200 rounded-lg font-mono text-gray-700 select-all"></textarea>
-            </div>
-
-            <input type="hidden" id="notice-target-email">
-
-            <div class="space-y-2 pt-1">
-                <button onclick="copyNoticeTextAndComment()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
-                    📋 一鍵複製內文並送出應徵留言 (手機版專用)
-                </button>
-                <button onclick="proceedGmailOpenWithComment()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
-                    💻 繼續前往 Gmail 寄信並送出應徵 (電腦版專用)
-                </button>
-                <button onclick="closeDeviceNoticeModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-xl font-semibold transition text-xs cursor-pointer">
-                    🔙 返回
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🚨 全平台通用警告/提示彈窗 -->
-    <div id="customAlertModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl text-center space-y-4">
-            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-                ⚠️
-            </div>
-            <div>
-                <h3 id="custom-alert-title" class="text-lg font-bold text-gray-900 mb-1">系統提示</h3>
-                <p id="custom-alert-message" class="text-xs text-gray-600 leading-relaxed whitespace-pre-line"></p>
-            </div>
-            <button onclick="closeCustomAlert()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition text-xs cursor-pointer shadow-md">
-                我知道了
-            </button>
-        </div>
-    </div>
-
-    <!-- 接案者填寫基本資料彈窗 -->
-    <div id="applyModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
-            <button onclick="closeApplyModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
-            
-            <h3 class="text-xl font-bold text-gray-900 mb-1">🎯 填寫接案基本資料</h3>
-            <p id="apply-modal-subtitle" class="text-xs text-amber-600 font-bold mb-4"></p>
-            
-            <input type="hidden" id="target-project-id">
-            <input type="hidden" id="target-title">
-            <input type="hidden" id="target-budget">
-            <input type="hidden" id="target-desc">
-            <input type="hidden" id="target-email">
-
-            <div class="space-y-3 text-left">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">發案者真實聯絡信箱 (已解鎖)</label>
-                    <input type="text" id="display-target-email" readonly class="w-full text-sm bg-gray-50 px-3 py-2 border border-gray-200 rounded-lg text-gray-600 font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">攝影師姓名 / 團隊名稱 <span class="text-red-500">*</span></label>
-                    <input type="text" id="apply-name" placeholder="例如：Ken 影像工作室" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">LINE ID 或電話號碼 <span class="text-red-500">*</span></label>
-                    <input type="text" id="apply-contact" placeholder="例如：line_id_123 或 0912345678" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
-                
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-gray-600">作品集連結(Google雲端) or其他連結 <span class="text-red-500">*</span></label>
-                        <select id="quick-fill-select" onchange="applyQuickFillPortfolio(this)" class="text-[11px] bg-amber-50 text-amber-800 border border-amber-300 rounded px-2 py-0.5 font-medium cursor-pointer focus:outline-none">
-                            <option value="">⚡ 快速帶入</option>
-                            <option value="all">📂 一次帶入</option>
-                        </select>
-                    </div>
-                    <textarea id="apply-portfolio" rows="2" placeholder="https://drive.google.com/...&#10;IG: https://instagram.com/...&#10;FB: https://facebook.com/..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-                </div>
-
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-gray-600">簡短自介 / 報價備註 <span class="text-red-500">*</span></label>
-                        <button type="button" onclick="insertMyProfileIntro()" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
-                            ✨ 一鍵代入個人簡介
-                        </button>
-                    </div>
-                    <textarea id="apply-message" rows="3" placeholder="例如：有 3 年商業攝影經驗..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">💬 應徵者留言 (將顯示於案件下方與管理後台) <span class="text-red-500">*</span></label>
-                    <textarea id="apply-comment" rows="2" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-amber-50/40">應徵信件已寄出 如果找不到請在垃圾郵件尋找~感恩</textarea>
-                </div>
-                
-                <div class="flex gap-2 pt-2">
-                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition cursor-pointer text-xs">
-                        🔙 返回
-                    </button>
-                    <button onclick="showDeviceNoticeModal()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                        📋 複製資料並前往應徵
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 頁尾 -->
-    <footer class="bg-white border-t border-gray-200 mt-auto py-4 text-center text-xs text-gray-500 space-y-1">
-        <p>© 2026 ApertureX 光圈X. All rights reserved. 專業攝影師接案平台。</p>
-        <p>
-            <button onclick="openDisclaimerModal()" class="text-gray-400 hover:text-amber-600 underline cursor-pointer transition">
-                📜 服務條款與免責聲明
-            </button>
-        </p>
-    </footer>
-
     <!-- JavaScript 邏輯 -->
     <script>
         const SUPABASE_URL = 'https://ckiwfgcpueaunlevvzqc.supabase.co';
@@ -1661,7 +1537,7 @@
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-4";
                 card.innerHTML = `
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start gap-4">
                         <div>
                             <div class="flex items-center gap-2 mb-2 flex-wrap">
                                 <span class="${badgeColor} text-xs px-2.5 py-1 rounded-full font-medium">${p.category}</span>
@@ -1672,7 +1548,8 @@
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mt-1">${escapeHtml(p.title)}</h3>
                         </div>
-                        <span class="text-amber-600 font-bold text-base">NT$ ${escapeHtml(p.budget)}</span>
+                        <!-- 🎯 修改金額區塊，加入 whitespace-nowrap 確保手機版不會斷行擠壓 -->
+                        <span class="text-amber-600 font-bold text-base whitespace-nowrap shrink-0">NT$ ${escapeHtml(p.budget)}</span>
                     </div>
                     <p class="text-gray-600 text-sm">${escapeHtml(p.description)}</p>
                     
@@ -2079,7 +1956,6 @@
             fetchProjects();
         }
 
-        // 🎯 點擊「立即接案應徵」
         function tryApply(projectId, title, category, budget, desc, email) {
             if (!isLoggedIn) {
                 showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號。', '會員限定');
