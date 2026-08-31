@@ -176,7 +176,7 @@
                 <span id="hall-status-tip" class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">請先登入以解鎖接案按鈕</span>
             </div>
 
-            <!-- 分類篩選按鈕列 (已加入平面設計與動畫特效) -->
+            <!-- 分類篩選按鈕列 -->
             <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-2 items-center">
                 <span class="text-xs font-bold text-gray-500 mr-1">🔍 類別篩選：</span>
                 <button onclick="filterCategory('全部', this)" class="filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">全部案件</button>
@@ -215,10 +215,59 @@
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
             <button onclick="closeMyProjectsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             <h3 class="text-xl font-bold text-gray-900 mb-1">📂 我的發案管理</h3>
-            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">檢視您發布過的所有案件。點擊「我要結案」可強制評分並將案件轉為已結案。</p>
+            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">檢視您發布過的所有案件。可點擊編輯修改內容、點擊刪除移除案件，或點擊結案並評價。</p>
             
             <div id="my-projects-list-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
                 <p class="text-xs text-gray-400 text-center py-6">載入您的發案紀錄中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✏️ 編輯案件彈窗 -->
+    <div id="editProjectModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl">
+            <button onclick="closeEditProjectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">✏️ 編輯發布中的案件</h3>
+            
+            <input type="hidden" id="edit-project-id">
+
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">案件標題 <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit-project-title" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別 <span class="text-red-500">*</span></label>
+                        <select id="edit-project-category" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                            <option value="商業攝影">商業攝影</option>
+                            <option value="活動紀錄">活動紀錄</option>
+                            <option value="婚禮紀錄">婚禮紀錄</option>
+                            <option value="人像寫真">人像寫真</option>
+                            <option value="自媒體">自媒體</option>
+                            <option value="找剪輯">找剪輯</option>
+                            <option value="短影音">短影音</option>
+                            <option value="平面設計">平面設計</option>
+                            <option value="動畫製作+特效">動畫製作+特效</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$) <span class="text-red-500">*</span></label>
+                        <input type="text" id="edit-project-budget" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">詳細說明與要求 <span class="text-red-500">*</span></label>
+                    <textarea id="edit-project-desc" rows="3" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeEditProjectModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
+                        🔙 返回
+                    </button>
+                    <button onclick="submitEditProject()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm cursor-pointer">
+                        儲存變更至雲端 💾
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -362,7 +411,7 @@
         </div>
     </div>
 
-    <!-- 發案彈窗 (已支援平面設計與動畫特效選項) -->
+    <!-- 發案彈窗 -->
     <div id="postModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl">
             <button onclick="closePostModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
@@ -656,7 +705,7 @@
                 </div>
                 
                 <div class="flex gap-2 pt-2">
-                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition cursor-pointer text-xs">
+                    <button onclick="closeApplyModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition cursor-pointer text-xs">
                         🔙 返回
                     </button>
                     <button onclick="showDeviceNoticeModal()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
@@ -975,7 +1024,7 @@
             fetchRatingsAndRanking();
         }
 
-        // 🎯 專屬跑馬燈更新：直接同步所有攝影師與團隊名單進行前 10 位輪播
+        // 🎯 專屬跑馬燈更新
         function updateBroadcastFromRanking(rankingList) {
             broadcastList = [];
             if (rankingList && rankingList.length > 0) {
@@ -1564,7 +1613,11 @@
                         <p class="text-gray-500">預算：NT$ ${escapeHtml(p.budget)} | 類別：${escapeHtml(p.category)}</p>
                         <p class="text-gray-600 line-clamp-1">說明：${escapeHtml(p.description)}</p>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-2">
+                        ${isClosed ? '' : `
+                            <button onclick="openEditProjectModal(${p.id}, '${escapeHtml(p.title)}', '${escapeHtml(p.category)}', '${escapeHtml(p.budget)}', '${escapeHtml(p.description)}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">✏️ 編輯</button>
+                            <button onclick="deleteProject(${p.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🗑️ 刪除</button>
+                        `}
                         ${isClosed ? 
                             '<span class="text-gray-400 font-bold bg-gray-200 px-3 py-1.5 rounded-lg text-xs">已結案完成</span>' :
                             `<button onclick="openCloseProjectModal(${p.id}, '${escapeHtml(p.title)}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold transition cursor-pointer shadow-sm">🔒 我要結案</button>`
@@ -1577,6 +1630,72 @@
 
         function closeMyProjectsModal() {
             document.getElementById('myProjectsModal').classList.add('hidden');
+        }
+
+        // 🗑️ 刪除發布中的案件
+        async function deleteProject(id) {
+            if (!confirm('確定要永久刪除這個案件嗎？刪除後無法復原。')) {
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('projects')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showCustomAlert('刪除案件失敗：' + error.message, '系統錯誤');
+                return;
+            }
+
+            showCustomAlert('🗑️ 案件已成功刪除！', '刪除成功');
+            openMyProjectsModal(); // 重新整理發案管理清單
+            fetchProjects(); // 重新整理大廳
+        }
+
+        // ✏️ 開啟與關閉編輯案件彈窗
+        function openEditProjectModal(id, title, category, budget, description) {
+            document.getElementById('edit-project-id').value = id;
+            document.getElementById('edit-project-title').value = title;
+            document.getElementById('edit-project-category').value = category;
+            document.getElementById('edit-project-budget').value = budget;
+            document.getElementById('edit-project-desc').value = description;
+
+            document.getElementById('myProjectsModal').classList.add('hidden');
+            document.getElementById('editProjectModal').classList.remove('hidden');
+        }
+
+        function closeEditProjectModal() {
+            document.getElementById('editProjectModal').classList.add('hidden');
+            openMyProjectsModal();
+        }
+
+        // 💾 提交編輯後的案件內容至 Supabase
+        async function submitEditProject() {
+            const id = document.getElementById('edit-project-id').value;
+            const title = document.getElementById('edit-project-title').value.trim();
+            const category = document.getElementById('edit-project-category').value;
+            const budget = document.getElementById('edit-project-budget').value.trim();
+            const description = document.getElementById('edit-project-desc').value.trim();
+
+            if (!title || !budget || !description) {
+                showCustomAlert('請完整填寫所有案件欄位！', '欄位空白');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('projects')
+                .update({ title, category, budget, description })
+                .eq('id', id);
+
+            if (error) {
+                showCustomAlert('更新案件失敗：' + error.message, '系統錯誤');
+                return;
+            }
+
+            closeEditProjectModal();
+            showCustomAlert('🎉 案件內容已成功更新！', '更新成功');
+            fetchProjects();
         }
 
         // 🔒 開啟結案評價彈窗
