@@ -705,7 +705,7 @@
         </div>
     </div>
 
-    <!-- 📱 裝置提示與確認彈窗 (已加入打勾自動一鍵複製功能) -->
+    <!-- 📱 裝置提示與確認彈窗 -->
     <div id="deviceNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -867,11 +867,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const rateEmail = urlParams.get('rate');
             if (rateEmail) {
-                setTimeout(() => {
-                    document.getElementById('rating-target-email').value = rateEmail;
-                    document.getElementById('ratingModal').classList.remove('hidden');
-                    showCustomAlert(`✨ 系統已自動帶入發案者信箱：\n${rateEmail}\n請為攝影師給予合作評價！`, '快速評價');
-                }, 800);
+                // 🎯 點擊信件評價連結時：檢查是否登入，未登入則強制攔截要求登入
+                if (!isLoggedIn) {
+                    showCustomAlert('⭐ 歡迎回來！請先登入您的會員帳號，系統將自動為您開啟評價系統並帶入接案者信箱。', '評價系統登入驗證');
+                    // 將目標信箱暫存，等待登入後自動開啟
+                    window.pendingRateEmail = rateEmail;
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('rating-target-email').value = rateEmail;
+                        document.getElementById('ratingModal').classList.remove('hidden');
+                        showCustomAlert(`✨ 系統已自動帶入接案者信箱：\n${rateEmail}\n請為對方給予合作評價！`, '快速評價');
+                    }, 800);
+                }
             }
             
             const savedEmail = localStorage.getItem('lensmatch_saved_email');
@@ -884,14 +891,12 @@
             }
         });
 
-        // 🎯 打勾時自動觸發一鍵複製並解鎖寄信按鈕
         function handleCheckboxCopyAndUnlock() {
             const isChecked = document.getElementById('confirm-mail-checkbox').checked;
             const btnMobile = document.getElementById('mail-btn-mobile');
             const btnPc = document.getElementById('mail-btn-pc');
 
             if (isChecked) {
-                // 自動執行一鍵複製內文
                 const text = document.getElementById('notice-preview-text').value;
                 navigator.clipboard.writeText(text).then(() => {
                     showCustomAlert('✅ 已自動為您複製應徵內文！若手機無法自動跳轉，可直接至 Gmail 貼上寄出。', '自動複製成功');
@@ -899,14 +904,12 @@
                     console.error("自動複製失敗:", err);
                 });
 
-                // 解鎖按鈕
                 btnMobile.disabled = false;
                 btnMobile.className = "w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2 text-center px-2";
                 
                 btnPc.disabled = false;
                 btnPc.className = "w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2";
             } else {
-                // 鎖定按鈕
                 btnMobile.disabled = true;
                 btnMobile.className = "w-full bg-gray-300 text-gray-500 py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-not-allowed flex items-center justify-center gap-2 text-center px-2";
                 
@@ -1363,6 +1366,17 @@
             renderProjects();
             fetchRatingsAndRanking();
             updateMyProjectsBadge();
+
+            // 🎯 如果是透過點擊信件評價連結進來且先前未登入，登入後自動帶入並開啟評價彈窗
+            if (window.pendingRateEmail) {
+                const targetToRate = window.pendingRateEmail;
+                window.pendingRateEmail = null;
+                setTimeout(() => {
+                    document.getElementById('rating-target-email').value = targetToRate;
+                    document.getElementById('ratingModal').classList.remove('hidden');
+                    showCustomAlert(`✨ 登入成功！已自動帶入接案者信箱：\n${targetToRate}\n請為對方給予合作評價！`, '快速評價');
+                }, 800);
+            }
         }
 
         function updateBroadcastFromRanking(rankingList) {
@@ -2221,7 +2235,7 @@
                 .eq('id', id);
 
             if (error) {
-                showCustomAlert('更新案件失敗：' + error.message, '系統錯誤');
+                showCustomAlert('更新案件失敗：' + error.message, '更新錯誤');
                 return;
             }
 
