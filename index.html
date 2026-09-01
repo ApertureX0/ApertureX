@@ -1097,14 +1097,15 @@
             const { data: messages, error } = await supabaseClient
                 .from('global_chat')
                 .select('*')
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: false })
+                .limit(30);
 
             if (error) {
                 chatBox.innerHTML = '<p class="text-xs text-red-400 text-center py-4">載入聊天訊息失敗。</p>';
                 return;
             }
 
-            renderChatMessages(messages || []);
+            renderChatMessages((messages || []).reverse());
         }
 
         function renderChatMessages(messages) {
@@ -1178,20 +1179,6 @@
             }
 
             input.value = '';
-
-            const { data: allMsgs } = await supabaseClient
-                .from('global_chat')
-                .select('id, created_at')
-                .order('created_at', { ascending: true });
-
-            if (allMsgs && allMsgs.length > 50) {
-                const excessCount = allMsgs.length - 50;
-                const idsToDelete = allMsgs.slice(0, excessCount).map(m => m.id);
-                await supabaseClient
-                    .from('global_chat')
-                    .delete()
-                    .in('id', idsToDelete);
-            }
         }
 
         function setupChatRealtime() {
