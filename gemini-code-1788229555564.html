@@ -304,7 +304,6 @@
                         <input type="text" id="edit-project-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-                <!-- 🎯 編輯：拍攝日期 與 拍攝地點 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
@@ -505,7 +504,6 @@
                         <input type="text" id="post-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-                <!-- 🎯 拍攝日期與拍攝地點欄位 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
@@ -669,8 +667,8 @@
         </div>
     </div>
 
-    <!-- 📷 攝影師/團隊專屬個人檔案與評價詳情頁面彈窗 -->
-    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+    <!-- 📷 攝影師/團隊專屬個人檔案與評價詳情頁面彈窗 (修改 z-index 確保在總覽名單之上) -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[70] px-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[85vh] flex flex-col">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             <h3 class="text-xl font-bold text-gray-900 mb-1">👤 攝影師 / 團隊專屬檔案</h3>
@@ -678,7 +676,7 @@
             
             <!-- 個人檔案資訊區塊 -->
             <div id="freelancer-profile-card" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4 space-y-2 text-xs">
-                <p><strong>🎯 服務項目與個人介紹：</strong></p>
+                <p><b>🎯 服務項目與個人介紹：</b></p>
                 <div class="max-h-60 overflow-y-auto pr-1">
                     <div id="profile-services" class="text-gray-700 font-medium whitespace-pre-line bg-white p-3 rounded-lg border border-amber-100 space-y-3">未填寫</div>
                 </div>
@@ -691,6 +689,19 @@
 
             <h4 class="text-sm font-bold text-gray-900 mb-2">⭐ 案主合作評價紀錄</h4>
             <div id="detail-reviews-list" class="space-y-3 overflow-y-auto flex-grow pr-1"></div>
+        </div>
+    </div>
+
+    <!-- 👥 所有註冊攝影師與團隊獨立列表彈窗 -->
+    <div id="allPhotographersModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
+            <button onclick="closeAllPhotographersModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">👥 所有註冊攝影師與團隊總覽</h3>
+            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">點擊任意攝影師或團隊名稱，即可查看詳細檔案與所有案主評價紀錄。</p>
+            
+            <div id="all-photographers-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
+                <p class="text-xs text-gray-400 text-center py-6">載入攝影師名單中...</p>
+            </div>
         </div>
     </div>
 
@@ -1102,8 +1113,8 @@
 
                     const row = document.createElement('div');
                     row.className = "p-3 bg-gray-50 hover:bg-amber-50 rounded-xl border border-gray-200 text-xs flex justify-between items-center cursor-pointer transition";
+                    // 🎯 修改：點擊後直接開啟詳細檔案，不關閉總覽清單
                     row.onclick = () => {
-                        closeAllPhotographersModal();
                         openDetailModal(item.email, item.name);
                     };
                     row.innerHTML = `
@@ -1887,7 +1898,6 @@
                     
                     <h3 class="text-lg font-bold text-gray-900">${escapeHtml(p.title)}</h3>
                     
-                    <!-- 🎯 顯示 拍攝日期 與 拍攝地點 -->
                     <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs space-y-1 text-gray-700">
                         <p>📅 <b>拍攝日期：</b>${escapeHtml(p.shoot_time || '未填寫')}</p>
                         <p>📍 <b>拍攝地點：</b>${escapeHtml(p.shoot_location || '未填寫')}</p>
