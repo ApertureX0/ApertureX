@@ -2254,7 +2254,7 @@
                                 <span class="font-bold text-gray-900 text-sm">${escapeHtml(p.title)}</span>
                                 <span class="${isClosed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded font-semibold">${p.status || '招募中'}</span>
                             </div>
-                            <p class="text-gray-500">預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
+                            <p class="text-gray-500">案件 ID : ${Number(p.id)} | 預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
                             <p class="text-gray-500">日期 : ${escapeHtml(p.shoot_time || '未填寫')} | 地點 : ${escapeHtml(p.shoot_location || '未填寫')}</p>
                             <p class="text-gray-600 line-clamp-1">說明 : ${escapeHtml(p.description)}</p>
                         </div>
@@ -2541,24 +2541,38 @@ ${rateLink}
 
             if (!projectId || !comment) return;
 
-            await supabaseClient
-                .from('project_comments')
-                .insert([
-                    {
-                        project_id: parseInt(projectId),
-                        freelancer_contact: contact,
-                        message: comment,
-                        is_read: false
-                    }
-                ]);
+            const numericProjectId = Number(projectId);
+            if (!Number.isFinite(numericProjectId) || !currentUserId) {
+                showCustomAlert('應徵資料不完整，請重新整理頁面後再試一次。', '送出失敗');
+                return false;
+            }
 
-            const { data: comments } = await supabaseClient.from('project_comments').select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at');
-            globalCommentsData = comments || [];
-            renderProjects();
+            // 明確把目前登入者與目前案件 ID 一起寫入，避免切換帳號或案件後
+            // 應徵紀錄被掛到錯誤的案件／使用者。
+            const { error: insertError } = await supabaseClient
+                .from('project_comments')
+                .insert([{
+                    project_id: numericProjectId,
+                    freelancer_user_id: Number(currentUserId),
+                    freelancer_name: currentUserName || name,
+                    freelancer_contact: contact,
+                    message: comment,
+                    is_read: false
+                }]);
+
+            if (insertError) {
+                console.error('應徵留言寫入失敗：', insertError);
+                showCustomAlert('應徵留言送出失敗：' + insertError.message, '送出失敗');
+                return false;
+            }
+
+            await fetchCommentsAndRefresh();
+            return true;
         }
 
         async function proceedMailtoOpenWithComment() {
-            await saveApplicationComment();
+            const saved = await saveApplicationComment();
+            if (!saved) return;
             const text = document.getElementById('notice-preview-text').value;
             const clientEmail = document.getElementById('notice-target-email').value;
             const title = document.getElementById('target-title').value;
@@ -2570,7 +2584,8 @@ ${rateLink}
         }
 
         async function proceedGmailOpenWithComment() {
-            await saveApplicationComment();
+            const saved = await saveApplicationComment();
+            if (!saved) return;
             const text = document.getElementById('notice-preview-text').value;
             const clientEmail = document.getElementById('notice-target-email').value;
             const title = document.getElementById('target-title').value;
