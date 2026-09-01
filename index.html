@@ -273,7 +273,7 @@
 
     <!-- ✏️ 編輯案件彈窗 -->
     <div id="editProjectModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeEditProjectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             <h3 class="text-xl font-bold text-gray-900 mb-4">✏️ 編輯發布中的案件</h3>
             
@@ -302,6 +302,16 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$) <span class="text-red-500">*</span></label>
                         <input type="text" id="edit-project-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
+                        <input type="text" id="edit-project-time" placeholder="例如: 2026/09/12" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝地點 <span class="text-red-500">*</span></label>
+                        <input type="text" id="edit-project-location" placeholder="例如: 台北市信義區" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div>
@@ -471,12 +481,12 @@
             <h3 class="text-xl font-bold text-gray-900 mb-4">📝 發佈新的拍攝案件</h3>
             <div class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">案件標題</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">案件標題 <span class="text-red-500">*</span></label>
                     <input type="text" id="post-title" placeholder="例如：餐廳美食拍攝" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別</label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別 <span class="text-red-500">*</span></label>
                         <select id="post-category" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
                             <option value="商業攝影">商業攝影</option>
                             <option value="活動紀錄">活動紀錄</option>
@@ -490,18 +500,28 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$)</label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">預算範圍 (NT$) <span class="text-red-500">*</span></label>
                         <input type="text" id="post-budget" onblur="formatCurrencyInput(this)" placeholder="例如: 3,000~5,000" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
+                        <input type="text" id="post-time" placeholder="例如: 2026/09/12" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝地點 <span class="text-red-500">*</span></label>
+                        <input type="text" id="post-location" placeholder="例如: 台北市信義區" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-gray-600">詳細說明與要求</label>
+                        <label class="block text-xs font-semibold text-gray-600">詳細說明與要求 <span class="text-red-500">*</span></label>
                         <button type="button" onclick="insertProjectTemplate('post-desc')" class="text-[11px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold transition cursor-pointer">
                             ✨ 快速代入範本
                         </button>
                     </div>
-                    <textarea id="post-desc" rows="4" placeholder="請簡述拍攝需求與地點..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                    <textarea id="post-desc" rows="4" placeholder="請簡述拍攝需求..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg"></textarea>
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button onclick="closePostModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition cursor-pointer text-xs">
@@ -647,8 +667,8 @@
         </div>
     </div>
 
-    <!-- 📷 攝影師/團隊專屬個人檔案與評價詳情頁面彈窗 -->
-    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+    <!-- 📷 攝影師/團隊專屬個人檔案與評價詳情頁面彈窗 (修改 z-index 確保在總覽名單之上) -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[70] px-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-xl max-h-[85vh] flex flex-col">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
             <h3 class="text-xl font-bold text-gray-900 mb-1">👤 攝影師 / 團隊專屬檔案</h3>
@@ -656,7 +676,7 @@
             
             <!-- 個人檔案資訊區塊 -->
             <div id="freelancer-profile-card" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4 space-y-2 text-xs">
-                <p><strong>🎯 服務項目與個人介紹：</strong></p>
+                <p><b>🎯 服務項目與個人介紹：</b></p>
                 <div class="max-h-60 overflow-y-auto pr-1">
                     <div id="profile-services" class="text-gray-700 font-medium whitespace-pre-line bg-white p-3 rounded-lg border border-amber-100 space-y-3">未填寫</div>
                 </div>
@@ -672,6 +692,19 @@
         </div>
     </div>
 
+    <!-- 👥 所有註冊攝影師與團隊獨立列表彈窗 -->
+    <div id="allPhotographersModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl max-h-[85vh] flex flex-col">
+            <button onclick="closeAllPhotographersModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">👥 所有註冊攝影師與團隊總覽</h3>
+            <p class="text-xs text-gray-500 mb-4 pb-2 border-b border-gray-100">點擊任意攝影師或團隊名稱，即可查看詳細檔案與所有案主評價紀錄。</p>
+            
+            <div id="all-photographers-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
+                <p class="text-xs text-gray-400 text-center py-6">載入攝影師名單中...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- 📱 裝置提示與確認彈窗 (用於寄信與送出應徵) -->
     <div id="deviceNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
@@ -680,7 +713,7 @@
             </h3>
             <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 leading-relaxed space-y-2">
                 <p><b>貼心提醒：</b>點擊下方按鈕後，系統會<b>自動將您的應徵留言送至案主的發案管理後台</b>，並為您開啟 Gmail 寄信！</p>
-                <p><b>手機版用戶：</b>如果是用手機版本，請按下按鈕，系統將自動開啟 Gmail App 並帶入所有應徵資訊！</p>
+                <p><b>手機版用戶：</b>如果是用手機版本，請按下按鈕，系統將自動開啟 Gmail App 並帶入所有應徵資訊！<b>如果手機版本沒有跳轉到 Gmail，請自行前往 Gmail 寄信！</b></p>
             </div>
 
             <div>
@@ -691,7 +724,6 @@
             <input type="hidden" id="notice-target-email">
 
             <div class="space-y-2 pt-1">
-                <!-- 🎯 手機版改為透過 mailto 自動開啟郵件 App 帶入資訊 -->
                 <button onclick="proceedMailtoOpenWithComment()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2 text-center px-2">
                     ✉️ 開啟手機 Gmail App 寄信並送出應徵 (手機版專用)
                 </button>
@@ -877,7 +909,7 @@
                 msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5`;
                 msgDiv.innerHTML = `
                     <div class="flex items-center gap-1.5 text-[11px] text-gray-500 px-1">
-                        <span class="font-bold text-gray-800">${escapeHtml(m.user_name)}</span>
+                        <span onclick="tryOpenChatUserProfile('${escapeHtml(m.user_email)}', '${escapeHtml(m.user_name)}')" class="font-bold text-gray-800 hover:text-amber-600 underline cursor-pointer">${escapeHtml(m.user_name)}</span>
                         ${roleBadge}
                         <span class="text-[10px] text-gray-400">${timeStr}</span>
                     </div>
@@ -888,6 +920,15 @@
                 chatBox.appendChild(msgDiv);
             });
             chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function tryOpenChatUserProfile(email, name) {
+            if (!isLoggedIn) {
+                showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號，才可查看用戶個人介紹與評價。', '會員限定');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            openDetailModal(email, name);
         }
 
         async function sendChatMessage() {
@@ -980,9 +1021,7 @@
 
         function insertProjectTemplate(elementId) {
             const templateText = 
-`【拍攝地點】：
-【拍攝日期】：
-【工作內容與需求】：`;
+`【工作內容與需求】：`;
             
             const target = document.getElementById(elementId);
             if (target) {
@@ -1074,8 +1113,8 @@
 
                     const row = document.createElement('div');
                     row.className = "p-3 bg-gray-50 hover:bg-amber-50 rounded-xl border border-gray-200 text-xs flex justify-between items-center cursor-pointer transition";
+                    // 🎯 修改：點擊後直接開啟詳細檔案，不關閉總覽清單
                     row.onclick = () => {
-                        closeAllPhotographersModal();
                         openDetailModal(item.email, item.name);
                     };
                     row.innerHTML = `
@@ -1844,7 +1883,7 @@
                 const commentCount = projectComments.length;
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-4";
+                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-3";
                 card.innerHTML = `
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -1858,6 +1897,12 @@
                     </div>
                     
                     <h3 class="text-lg font-bold text-gray-900">${escapeHtml(p.title)}</h3>
+                    
+                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs space-y-1 text-gray-700">
+                        <p>📅 <b>拍攝日期：</b>${escapeHtml(p.shoot_time || '未填寫')}</p>
+                        <p>📍 <b>拍攝地點：</b>${escapeHtml(p.shoot_location || '未填寫')}</p>
+                    </div>
+
                     <p class="text-gray-600 text-sm">${escapeHtml(p.description)}</p>
                     
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 flex-wrap gap-2">
@@ -1887,7 +1932,7 @@
                                     <div class="bg-white p-2.5 rounded-lg border border-gray-200 text-xs space-y-1">
                                         <div class="flex justify-between font-bold">
                                             <span onclick="openDetailModal('${escapeHtml(c.freelancer_email)}', '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
-                                                📷 ${escapeHtml(c.freelancer_name)} (點擊查看評價)
+                                                📷 應徵者：${escapeHtml(c.freelancer_name)} (點擊查看評價)
                                             </span>
                                             <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
                                         </div>
@@ -2027,6 +2072,7 @@
                                 <span class="${isClosed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded font-semibold">${p.status || '招募中'}</span>
                             </div>
                             <p class="text-gray-500">預算 : NT$ ${escapeHtml(p.budget)} | 類別 : ${escapeHtml(p.category)}</p>
+                            <p class="text-gray-500">日期 : ${escapeHtml(p.shoot_time || '未填寫')} | 地點 : ${escapeHtml(p.shoot_location || '未填寫')}</p>
                             <p class="text-gray-600 line-clamp-1">說明 : ${escapeHtml(p.description)}</p>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -2036,6 +2082,8 @@
                                     data-title="${escapeHtml(p.title)}"
                                     data-category="${escapeHtml(p.category)}"
                                     data-budget="${escapeHtml(p.budget)}"
+                                    data-time="${escapeHtml(p.shoot_time || '')}"
+                                    data-location="${escapeHtml(p.shoot_location || '')}"
                                     data-description="${escapeHtml(p.description)}">
                                     ✏️ 編輯
                                 </button>
@@ -2065,6 +2113,8 @@
                         btn.dataset.title,
                         btn.dataset.category,
                         btn.dataset.budget,
+                        btn.dataset.time,
+                        btn.dataset.location,
                         btn.dataset.description
                     );
                 };
@@ -2095,11 +2145,13 @@
             fetchProjects();
         }
 
-        function openEditProjectModal(id, title, category, budget, description) {
+        function openEditProjectModal(id, title, category, budget, time, location, description) {
             document.getElementById('edit-project-id').value = id;
             document.getElementById('edit-project-title').value = title;
             document.getElementById('edit-project-category').value = category;
             document.getElementById('edit-project-budget').value = budget;
+            document.getElementById('edit-project-time').value = time;
+            document.getElementById('edit-project-location').value = location;
             document.getElementById('edit-project-desc').value = description;
 
             document.getElementById('myProjectsModal').classList.add('hidden');
@@ -2116,16 +2168,18 @@
             const title = document.getElementById('edit-project-title').value.trim();
             const category = document.getElementById('edit-project-category').value;
             const budget = document.getElementById('edit-project-budget').value.trim();
+            const time = document.getElementById('edit-project-time').value.trim();
+            const location = document.getElementById('edit-project-location').value.trim();
             const description = document.getElementById('edit-project-desc').value.trim();
 
-            if (!title || !budget || !description) {
-                showCustomAlert('請完整填寫所有案件欄位！', '欄位空白');
+            if (!title || !budget || !time || !location || !description) {
+                showCustomAlert('⚠️ 請完整填寫所有案件欄位（包含拍攝日期與拍攝地點），才可儲存！', '欄位未填');
                 return;
             }
 
             const { error } = await supabaseClient
                 .from('projects')
-                .update({ title, category, budget, description })
+                .update({ title, category, budget, shoot_time: time, shoot_location: location, description })
                 .eq('id', id);
 
             if (error) {
@@ -2229,10 +2283,12 @@
             const title = document.getElementById('post-title').value.trim();
             const category = document.getElementById('post-category').value;
             const budget = document.getElementById('post-budget').value.trim();
+            const time = document.getElementById('post-time').value.trim();
+            const location = document.getElementById('post-location').value.trim();
             const desc = document.getElementById('post-desc').value.trim();
 
-            if(!title || !budget || !desc) {
-                showCustomAlert('請完整填寫案件標題、預算與說明！', '欄位未填');
+            if(!title || !budget || !time || !location || !desc) {
+                showCustomAlert('⚠️ 請完整填寫所有欄位（包含「拍攝日期」與「拍攝地點」），否則無法發布案件！', '欄位未填');
                 return;
             }
 
@@ -2243,6 +2299,8 @@
                         title: title, 
                         category: category, 
                         budget: budget, 
+                        shoot_time: time,
+                        shoot_location: location,
                         description: desc, 
                         client_email: currentUserEmail,
                         status: '招募中'
@@ -2256,6 +2314,8 @@
 
             document.getElementById('post-title').value = '';
             document.getElementById('post-budget').value = '';
+            document.getElementById('post-time').value = '';
+            document.getElementById('post-location').value = '';
             document.getElementById('post-desc').value = '';
             closePostModal();
             showCustomAlert('成功發布至雲端資料庫！', '發布成功');
@@ -2369,7 +2429,6 @@ ${rateLink}
             renderProjects();
         }
 
-        // 🎯 手機版專用：透過 mailto 自動開啟手機郵件 App 並自動帶入
         async function proceedMailtoOpenWithComment() {
             await saveApplicationComment();
             const text = document.getElementById('notice-preview-text').value;
