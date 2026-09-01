@@ -178,6 +178,23 @@
                     </span>
                 </div>
 
+                <!-- 📢 版主專屬公告欄 (置頂顯示) -->
+                <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-extrabold text-amber-800 flex items-center gap-1">
+                            📢 <span>官方置頂公告</span>
+                        </span>
+                        <div id="admin-notice-btn-container" class="hidden">
+                            <button onclick="openAdminNoticeModal()" class="text-[11px] bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded-lg font-bold transition cursor-pointer">
+                                ⚙️ 發布/修改公告
+                            </button>
+                        </div>
+                    </div>
+                    <p id="announcement-display-text" class="text-xs text-gray-700 font-medium leading-relaxed">
+                        載入公告中...
+                    </p>
+                </div>
+
                 <!-- 訊息顯示框 -->
                 <div id="chat-messages-box" class="h-60 overflow-y-auto bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2 text-xs">
                     <p class="text-gray-400 text-center py-8">正在同步聊天訊息...</p>
@@ -216,6 +233,29 @@
                 <p class="text-sm text-gray-500 text-center py-6">正在從雲端載入最新案件...</p>
             </div>
         </main>
+    </div>
+
+    <!-- 📢 版主專屬發布公告彈窗 -->
+    <div id="adminNoticeModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4 text-left">
+            <button onclick="closeAdminNoticeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">📢 版主專屬公告設定</h3>
+            <p class="text-xs text-gray-500 mb-2">發布後將即時同步至所有在線會員的聊天室置頂公告欄。</p>
+            
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">公告內容 <span class="text-red-500">*</span></label>
+                <textarea id="admin-notice-input" rows="4" placeholder="請輸入最新的官方公告或注意事項..." class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button onclick="closeAdminNoticeModal()" class="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
+                    🔙 返回
+                </button>
+                <button onclick="submitAdminNotice()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-md cursor-pointer text-xs">
+                    發布公告置頂 🚀
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- 💬 客服中心專屬彈窗 -->
@@ -404,7 +444,6 @@
                     </div>
                 </div>
 
-                <!-- 📜 免責聲明打勾確認選項 (預設勾選並由程式控制) -->
                 <div class="flex items-start gap-2 pt-2 border-t border-gray-100">
                     <input type="checkbox" id="reg-agree-disclaimer" class="w-4 h-4 mt-0.5 text-amber-600 border-gray-300 rounded focus:ring-amber-500 cursor-pointer">
                     <label for="reg-agree-disclaimer" class="text-xs text-gray-600 select-none">
@@ -827,6 +866,9 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // 👑 版主管理員信箱 (將被自動排除於排行榜外)
+        const ADMIN_EMAIL = "seanshen0312@gmail.com";
+
         let isLoggedIn = false;
         let currentUserEmail = "";
         let currentUserName = "";
@@ -841,7 +883,6 @@
         let globalCommentsData = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // 🎯 檢查是否是點擊密碼重設信件回來的驗證
             const hash = window.location.hash;
             if (hash && hash.includes('type=recovery')) {
                 let newPassword = prompt("🔐 請輸入您的「新密碼」 (至少 6 位數)：");
@@ -851,14 +892,13 @@
                         showCustomAlert('密碼更新失敗：' + error.message, '錯誤');
                     } else {
                         showCustomAlert('🎉 密碼重設成功！請使用新密碼重新登入。', '成功');
-                        window.location.hash = ''; // 清除 token
+                        window.location.hash = '';
                     }
                 } else {
                     alert("密碼長度不足，請重新點擊信件連結操作。");
                 }
             }
 
-            // 🎯 使用 Supabase Auth 檢查目前是否有已登入的使用者
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session && session.user) {
                 const authEmail = session.user.email;
@@ -881,6 +921,8 @@
             setupRealtimeSubscription();
             setupChatRealtime();
             fetchChatMessages();
+            fetchAnnouncement();
+            setupAnnouncementRealtime();
             setupPresenceChannel();
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -898,6 +940,68 @@
                 }
             }
         });
+
+        async function fetchAnnouncement() {
+            const displayEl = document.getElementById('announcement-display-text');
+            const { data, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (data && data.content) {
+                displayEl.innerText = data.content;
+            } else {
+                displayEl.innerText = "歡迎來到 ApertureX 光圈X 專業攝影師媒合平台！";
+            }
+        }
+
+        function setupAnnouncementRealtime() {
+            supabaseClient
+                .channel('public:announcements')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, payload => {
+                    fetchAnnouncement();
+                })
+                .subscribe();
+        }
+
+        function openAdminNoticeModal() {
+            if (currentUserEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                showCustomAlert('⚠️ 您沒有版主權限！', '權限不足');
+                return;
+            }
+            const currentText = document.getElementById('announcement-display-text').innerText;
+            document.getElementById('admin-notice-input').value = currentText === "歡迎來到 ApertureX 光圈X 專業攝影師媒合平台！" ? "" : currentText;
+            document.getElementById('adminNoticeModal').classList.remove('hidden');
+        }
+
+        function closeAdminNoticeModal() {
+            document.getElementById('adminNoticeModal').classList.add('hidden');
+        }
+
+        async function submitAdminNotice() {
+            const content = document.getElementById('admin-notice-input').value.trim();
+            if (!content) {
+                showCustomAlert('公告內容不得為空！', '欄位空白');
+                return;
+            }
+
+            await supabaseClient.from('announcements').delete().neq('id', 0);
+
+            const { error } = await supabaseClient
+                .from('announcements')
+                .insert([{ content: content, admin_email: currentUserEmail }]);
+
+            if (error) {
+                showCustomAlert('發布公告失敗：請確認已建立 announcements 資料表與解除 RLS。\n' + error.message, '系統錯誤');
+                return;
+            }
+
+            closeAdminNoticeModal();
+            showCustomAlert('📢 官方置頂公告已成功更新！', '發布成功');
+            fetchAnnouncement();
+        }
 
         function setupPresenceChannel() {
             const presenceChannel = supabaseClient.channel('online_users_room');
@@ -970,8 +1074,9 @@
             messages.forEach(m => {
                 const timeStr = new Date(m.created_at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
                 const isMe = m.user_email === currentUserEmail;
+                const isAdmin = m.user_email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
                 
-                let roleBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold">${m.user_role || '會員'}</span>`;
+                let roleBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold">${isAdmin ? '👑 官方版主' : (m.user_role || '會員')}</span>`;
 
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5`;
@@ -1009,13 +1114,16 @@
             const text = input.value.trim();
             if (!text) return;
 
+            const isAdmin = currentUserEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+            const roleName = isAdmin ? '官方版主' : currentUserRole;
+
             const { error } = await supabaseClient
                 .from('global_chat')
                 .insert([
                     {
                         user_email: currentUserEmail,
                         user_name: currentUserName,
-                        user_role: currentUserRole,
+                        user_role: roleName,
                         message: text
                     }
                 ]);
@@ -1170,10 +1278,16 @@
             const container = document.getElementById('all-photographers-container');
             container.innerHTML = '';
 
-            if (!globalRankingList || globalRankingList.length === 0) {
+            // 👑 過濾掉版主帳號與案主身分
+            const validPhotographers = globalRankingList.filter(item => 
+                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
+                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+            );
+
+            if (!validPhotographers || validPhotographers.length === 0) {
                 container.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">目前尚無註冊攝影師資料。</p>';
             } else {
-                globalRankingList.forEach((item, index) => {
+                validPhotographers.forEach((item, index) => {
                     const displayScore = item.count > 0 ? `★ ${item.avg} (${item.count}則評價)` : '尚未評價';
                     const scoreColor = item.count > 0 ? 'text-amber-600 font-bold' : 'text-gray-400 text-[11px]';
 
@@ -1232,7 +1346,6 @@
             }
         }
 
-        // 🎯 流程：點擊註冊後，先彈出條款同意視窗
         async function handleLoginOrRegister() {
             const emailInput = document.getElementById('login-email').value.trim();
             const passwordInput = document.getElementById('login-password').value.trim();
@@ -1251,7 +1364,6 @@
             }
 
             try {
-                // 1. 先嘗試登入
                 const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
                     email: emailInput,
                     password: passwordInput
@@ -1273,7 +1385,6 @@
                     return;
                 }
 
-                // 2. 檢查是否已存在
                 const { data: existingUser } = await supabaseClient
                     .from('users')
                     .select('*')
@@ -1285,14 +1396,12 @@
                     return;
                 }
 
-                // 3. 新帳號需填寫稱呼
                 if (!nameInput) {
                     showCustomAlert('✨ 偵測為新帳號，請務必填寫「團隊名稱 / 您的稱呼」來完成註冊！', '資料未填');
                     nameContainer.classList.remove('hidden');
                     return;
                 }
 
-                // 暫存資料
                 window.pendingNewUser = {
                     email: emailInput,
                     password: passwordInput,
@@ -1301,7 +1410,6 @@
                     rememberMe: rememberMe
                 };
 
-                // 🎯 關鍵修改：點擊註冊後，先彈出免責聲明條款讓用戶閱讀同意
                 document.getElementById('registerDisclaimerModal').classList.remove('hidden');
 
             } catch (err) {
@@ -1310,14 +1418,11 @@
             }
         }
 
-        // 🎯 用戶按下條款的「我了解並同意」後觸發
         function acceptDisclaimerAndOpenProfile() {
             document.getElementById('registerDisclaimerModal').classList.add('hidden');
             
             if (window.pendingNewUser && window.pendingNewUser.role === '攝影師/團隊') {
-                // 開啟工作室檔案填寫彈窗
                 document.getElementById('registerProfileModal').classList.remove('hidden');
-                // 自動將免責聲明 checkbox 打勾
                 const agreeBox = document.getElementById('reg-agree-disclaimer');
                 if (agreeBox) agreeBox.checked = true;
             } else {
@@ -1400,6 +1505,12 @@
             document.getElementById('hall-status-tip').innerText = "已解鎖完整應徵權限";
             document.getElementById('hall-status-tip').className = "text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold";
 
+            if (currentUserEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                document.getElementById('admin-notice-btn-container').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-notice-btn-container').classList.add('hidden');
+            }
+
             const chatInput = document.getElementById('chat-input');
             const chatBtn = document.getElementById('chat-send-btn');
             chatInput.disabled = false;
@@ -1426,8 +1537,14 @@
 
         function updateBroadcastFromRanking(rankingList) {
             broadcastList = [];
-            if (rankingList && rankingList.length > 0) {
-                rankingList.slice(0, 10).forEach(item => {
+            // 👑 廣播列也過濾掉版主與案主
+            const validBroadcastItems = rankingList.filter(item => 
+                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
+                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+            );
+
+            if (validBroadcastItems && validBroadcastItems.length > 0) {
+                validBroadcastItems.slice(0, 10).forEach(item => {
                     let ratingText = item.count > 0 ? `(平均評分 ★ ${item.avg})` : `(新進駐實力派)`;
                     broadcastList.push(`🎉 駐站優秀攝影師/團隊：【${item.name}】 ${ratingText} 熱烈接案中！`);
                 });
@@ -1541,6 +1658,7 @@
             document.getElementById('auth-btn').innerText = "登入 / 註冊";
             document.getElementById('hall-status-tip').innerText = "請先登入以解鎖接案按鈕";
             document.getElementById('hall-status-tip').className = "text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold";
+            document.getElementById('admin-notice-btn-container').classList.add('hidden');
 
             const chatInput = document.getElementById('chat-input');
             const chatBtn = document.getElementById('chat-send-btn');
@@ -1655,13 +1773,19 @@
             globalRankingList = rankingList;
             updateBroadcastFromRanking(rankingList);
 
-            if (rankingList.length === 0) {
+            // 👑 關鍵過濾：在左側口碑排行榜中排除版主信箱與身分為「發案者」的帳號
+            const validRankingList = rankingList.filter(item => 
+                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
+                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+            );
+
+            if (validRankingList.length === 0) {
                 rankingContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">目前尚無排行榜資料</p>';
                 return;
             }
 
             rankingContainer.innerHTML = '';
-            rankingList.slice(0, 20).forEach((item, index) => {
+            validRankingList.slice(0, 20).forEach((item, index) => {
                 let medal = `#${index + 1}`;
                 if(index === 0) medal = '🥇';
                 if(index === 1) medal = '🥈';
@@ -1749,7 +1873,7 @@
 
             if (userProfile.fb && userProfile.fb.trim() !== "") {
                 fbBtn.href = userProfile.fb;
-                fbBtn.classList.add('hidden');
+                fbBtn.classList.remove('hidden');
             } else {
                 fbBtn.classList.add('hidden');
             }
