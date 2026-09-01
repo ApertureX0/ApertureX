@@ -2069,11 +2069,9 @@
             if (!email || !email.includes('@')) return "保密中";
             const parts = email.split('@');
             const name = parts[0];
-            const domain = parts[1];
-            if (name.length <= 2) {
-                return name[0] + '***@' + domain;
-            }
-            return name.substring(0, 2) + '****@' + domain;
+            const domain = parts.slice(1).join('@');
+            const maskedName = '*'.repeat(Math.max(name.length, 6));
+            return maskedName + '@' + domain;
         }
 
         function renderProjects() {
