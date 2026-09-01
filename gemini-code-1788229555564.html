@@ -65,7 +65,7 @@
                 
                 <!-- 未登入區塊 -->
                 <div id="login-section">
-                    <p class="text-xs text-gray-500 mb-3">首次登入請填寫稱呼與密碼註冊；之後只需輸入 Email 與密碼即可！</p>
+                    <p class="text-xs text-gray-500 mb-3">已有帳號請直接登入；第一次使用請點「新會員註冊」。</p>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 mb-1">登入/註冊 (請輸入 Email) <span class="text-red-500">*</span></label>
@@ -74,7 +74,7 @@
                         
                         <!-- 動態顯示的新帳號註冊欄位 -->
                         <div id="name-field-container" class="hidden space-y-3 bg-amber-50/50 p-3 rounded-lg border border-amber-200">
-                            <p class="text-xs font-bold text-amber-700">✨ 偵測為新帳號，請完善註冊資料：</p>
+                            <p class="text-xs font-bold text-amber-700">✨ 新會員註冊資料：</p>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1">您的身分 <span class="text-red-500">*</span></label>
                                 <select id="reg-role-select" class="w-full text-xs px-3 py-2 border border-amber-300 rounded-lg bg-white font-medium">
@@ -101,7 +101,10 @@
                         </div>
 
                         <button onclick="handleLoginOrRegister()" id="auth-btn" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-sm font-medium transition mt-1 cursor-pointer">
-                            登入 / 註冊
+                            登入帳號
+                        </button>
+                        <button onclick="toggleRegistrationMode()" id="register-toggle-btn" class="w-full border border-amber-500 text-amber-700 hover:bg-amber-50 py-2 rounded-lg text-sm font-medium transition cursor-pointer">
+                            新會員註冊
                         </button>
                     </div>
                 </div>
@@ -1360,15 +1363,27 @@
             document.getElementById('allPhotographersModal').classList.add('hidden');
         }
 
-        // V4 安全調整：不再於未登入狀態查詢 public.users 來判斷 Email 是否已註冊，
-        // 避免帳號列舉（account enumeration）。登入失敗後才提供新會員註冊欄位。
+        // 登入與註冊採明確模式切換，不再用登入失敗來推測是否為新帳號。
+        // 這可避免已註冊會員輸錯密碼時，被誤判成新用戶。
         async function checkUserExist() {
-            const emailInput = document.getElementById('login-email').value.trim();
+            // 保留欄位事件，但不查詢使用者是否存在，避免帳號列舉。
+        }
+
+        function toggleRegistrationMode() {
             const nameContainer = document.getElementById('name-field-container');
             const authBtn = document.getElementById('auth-btn');
-            if (!emailInput || !emailInput.includes('@')) return;
-            nameContainer.classList.add('hidden');
-            authBtn.innerText = "登入 / 註冊";
+            const toggleBtn = document.getElementById('register-toggle-btn');
+            const isHidden = nameContainer.classList.contains('hidden');
+
+            if (isHidden) {
+                nameContainer.classList.remove('hidden');
+                authBtn.innerText = '建立新帳號';
+                toggleBtn.innerText = '返回帳號登入';
+            } else {
+                nameContainer.classList.add('hidden');
+                authBtn.innerText = '登入帳號';
+                toggleBtn.innerText = '新會員註冊';
+            }
         }
 
         async function handleLoginOrRegister() {
@@ -1377,7 +1392,7 @@
             const nameInput = document.getElementById('login-name').value.trim();
             const roleSelect = document.getElementById('reg-role-select').value;
             const nameContainer = document.getElementById('name-field-container');
-            const authBtn = document.getElementById('auth-btn');
+            const isRegistrationMode = !nameContainer.classList.contains('hidden');
 
             if(!emailInput || !emailInput.includes('@')) {
                 showCustomAlert('請輸入有效的電子郵件！', '格式錯誤');
@@ -1389,12 +1404,17 @@
             }
 
             try {
-                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-                    email: emailInput,
-                    password: passwordInput
-                });
+                if (!isRegistrationMode) {
+                    const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                        email: emailInput,
+                        password: passwordInput
+                    });
 
-                if (!authError && authData.session) {
+                    if (authError || !authData.session) {
+                        showCustomAlert('Email 或密碼不正確。若您還沒有帳號，請點下方「新會員註冊」。', '登入失敗');
+                        return;
+                    }
+
                     const { data: existingUser } = await supabaseClient
                         .from('users')
                         .select('id,email,name,role,services,portfolio,ig,fb,created_at')
@@ -1410,17 +1430,8 @@
                     return;
                 }
 
-                // V4：登入失敗時不查詢 users 表確認 Email 是否存在，避免洩漏註冊狀態。
-                // 第一次失敗先顯示新會員欄位；已註冊會員可檢查密碼或使用「忘記密碼」。
-                if (nameContainer.classList.contains('hidden')) {
-                    nameContainer.classList.remove('hidden');
-                    authBtn.innerText = "新會員註冊";
-                    showCustomAlert('請填寫下方「身分」與「團隊名稱 / 您的稱呼」，完成後再次按下「新會員註冊」。\n\n若您已有帳號，請確認密碼是否正確，或使用「忘記密碼」。', '✨ 新帳號進行註冊');
-                    return;
-                }
-
                 if (!nameInput) {
-                    showCustomAlert('新會員請填寫「團隊名稱 / 您的稱呼」後再完成註冊；已有帳號請檢查密碼或使用「忘記密碼」。', '資料未填');
+                    showCustomAlert('請填寫「團隊名稱 / 您的稱呼」後再完成註冊。', '註冊資料未完成');
                     return;
                 }
 
@@ -1482,6 +1493,13 @@
                 return;
             }
 
+            // Supabase 為避免帳號列舉，已存在的 Email 有時不會直接回傳明確錯誤。
+            // identities 為空時視為既有帳號，不繼續建立公開會員資料。
+            if (signUpData?.user && Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+                showCustomAlert('此 Email 已有帳號，請返回登入；若忘記密碼可使用「忘記密碼？」。', '帳號已存在');
+                return;
+            }
+
             const { error: insertError } = await supabaseClient
                 .from('users')
                 .insert([{ 
@@ -1496,6 +1514,12 @@
 
             if (insertError) {
                 console.error("寫入 users 資料表提示:", insertError.message);
+                if (String(insertError.message || '').toLowerCase().includes('duplicate') || String(insertError.code || '') === '23505') {
+                    showCustomAlert('此 Email 已有會員資料，請返回登入；若忘記密碼可使用「忘記密碼？」。', '帳號已存在');
+                } else {
+                    showCustomAlert('會員資料建立失敗，請稍後再試。', '註冊失敗');
+                }
+                return;
             }
 
             currentUserEmail = u.email;
