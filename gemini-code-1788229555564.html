@@ -879,23 +879,49 @@
         let globalRankingList = [];
         let globalCommentsData = [];
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const hash = window.location.hash;
-            if (hash && hash.includes('type=recovery')) {
-                let newPassword = prompt("🔐 請輸入您的「新密碼」 (至少 6 位數)：");
-                if (newPassword && newPassword.length >= 6) {
-                    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-                    if (error) {
-                        showCustomAlert('密碼更新失敗：' + error.message, '錯誤');
-                    } else {
-                        showCustomAlert('🎉 密碼重設成功！請使用新密碼重新登入。', '成功');
-                        window.location.hash = '';
-                    }
-                } else {
-                    alert("密碼長度不足，請重新點擊信件連結操作。");
-                }
+        // Supabase 密碼重設連結完成驗證後，會觸發 PASSWORD_RECOVERY。
+        // 必須等這個事件出現後再 updateUser，否則容易遇到 Auth session missing / 無法更新密碼。
+        let passwordRecoveryHandled = false;
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' && !passwordRecoveryHandled) {
+                passwordRecoveryHandled = true;
+                setTimeout(() => handlePasswordRecovery(), 0);
+            }
+        });
+
+        async function handlePasswordRecovery() {
+            const newPassword = prompt("🔐 請輸入您的「新密碼」 (至少 6 位數)：");
+
+            if (!newPassword) {
+                showCustomAlert('您尚未輸入新密碼。可重新點擊重設密碼信中的連結再次操作。', '尚未更新密碼');
+                return;
             }
 
+            if (newPassword.length < 6) {
+                showCustomAlert('新密碼至少需要 6 個字元，請重新點擊信件連結後再設定。', '密碼過短');
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+            if (error) {
+                console.error('Password recovery update failed:', error);
+                showCustomAlert('密碼更新失敗：' + error.message + '\n請確認重設連結尚未過期，再重新嘗試。', '更新失敗');
+                return;
+            }
+
+            // 更新成功後主動登出，避免重設連結建立的暫時 Session 繼續停留。
+            await supabaseClient.auth.signOut();
+
+            // 清除 Supabase 回傳的 code/hash，避免重新整理時再次觸發重設流程。
+            const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+            window.history.replaceState({}, document.title, cleanUrl);
+
+            showCustomAlert('🎉 密碼重設成功！請使用新密碼重新登入。', '成功');
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session && session.user) {
                 const authEmail = session.user.email;
@@ -1668,8 +1694,9 @@
             btn.disabled = true;
 
             try {
+                const redirectUrl = `${window.location.origin}${window.location.pathname}`;
                 const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.href.split('?')[0],
+                    redirectTo: redirectUrl,
                 });
 
                 if (error) {
