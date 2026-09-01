@@ -93,11 +93,11 @@
                             <input type="password" id="login-password" placeholder="請輸入密碼 (至少6位數)" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
                         </div>
 
-                        <!-- 記住帳號密碼與忘記密碼連結 -->
+                        <!-- 保持登入狀態與忘記密碼連結 -->
                         <div class="flex items-center justify-between pt-1 text-xs">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="remember-me" class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-800 cursor-pointer">
-                                <label for="remember-me" class="text-gray-600 cursor-pointer select-none">記住帳號密碼</label>
+                                <label for="remember-me" class="text-gray-600 cursor-pointer select-none">保持登入狀態</label>
                             </div>
                             <button onclick="openForgotPasswordModal()" class="text-amber-600 hover:underline font-semibold cursor-pointer">忘記密碼？</button>
                         </div>
@@ -860,13 +860,12 @@
 
     <!-- JavaScript 邏輯 -->
     <script>
-        // 🛠️ Supabase 專案設定
         const SUPABASE_URL = 'https://fxkgbmoidaziikbxdyyy.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_cZg1guFW7cRQz5LE7frF1w_7p8Fm5Xk';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // 👑 版主管理員信箱 (將被自動排除於排行榜外)
+        // Publishable key 可存在前端；真正的資料權限由 Supabase RLS 控制。
+        // ADMIN_EMAIL 僅用於介面顯示，不能視為安全邊界；真正管理權限由資料庫 RLS / is_admin() 判定。
         const ADMIN_EMAIL = "seanshen0312@gmail.com";
 
         let isLoggedIn = false;
@@ -904,7 +903,7 @@
                 const authEmail = session.user.email;
                 const { data: userData } = await supabaseClient
                     .from('users')
-                    .select('*')
+                    .select('id,email,name,role,services,portfolio,ig,fb,created_at')
                     .eq('email', authEmail)
                     .maybeSingle();
 
@@ -994,7 +993,7 @@
                 .insert([{ content: content, admin_email: currentUserEmail }]);
 
             if (error) {
-                showCustomAlert('發布公告失敗：請確認已建立 announcements 資料表與解除 RLS。\n' + error.message, '系統錯誤');
+                showCustomAlert('發布公告失敗：請確認管理員權限與 RLS Policy 設定。\n' + error.message, '系統錯誤');
                 return;
             }
 
@@ -1212,7 +1211,7 @@
 
             const { data: user, error } = await supabaseClient
                 .from('users')
-                .select('*')
+                .select('id,email,name,role,services,portfolio,ig,fb,created_at')
                 .eq('email', currentUserEmail)
                 .maybeSingle();
 
@@ -1278,7 +1277,6 @@
             const container = document.getElementById('all-photographers-container');
             container.innerHTML = '';
 
-            // 👑 過濾掉版主帳號與案主身分
             const validPhotographers = globalRankingList.filter(item => 
                 item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
                 (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
@@ -1320,30 +1318,15 @@
             document.getElementById('allPhotographersModal').classList.add('hidden');
         }
 
+        // V4 安全調整：不再於未登入狀態查詢 public.users 來判斷 Email 是否已註冊，
+        // 避免帳號列舉（account enumeration）。登入失敗後才提供新會員註冊欄位。
         async function checkUserExist() {
             const emailInput = document.getElementById('login-email').value.trim();
             const nameContainer = document.getElementById('name-field-container');
             const authBtn = document.getElementById('auth-btn');
-
             if (!emailInput || !emailInput.includes('@')) return;
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('email', emailInput)
-                    .maybeSingle();
-
-                if (data) {
-                    nameContainer.classList.add('hidden');
-                    authBtn.innerText = "登入帳號";
-                } else {
-                    nameContainer.classList.remove('hidden');
-                    authBtn.innerText = "註冊並登入";
-                }
-            } catch (err) {
-                console.error("檢查使用者失敗:", err);
-            }
+            nameContainer.classList.add('hidden');
+            authBtn.innerText = "登入帳號";
         }
 
         async function handleLoginOrRegister() {
@@ -1372,7 +1355,7 @@
                 if (!authError && authData.session) {
                     const { data: existingUser } = await supabaseClient
                         .from('users')
-                        .select('*')
+                        .select('id,email,name,role,services,portfolio,ig,fb,created_at')
                         .eq('email', emailInput)
                         .maybeSingle();
 
@@ -1385,20 +1368,17 @@
                     return;
                 }
 
-                const { data: existingUser } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('email', emailInput)
-                    .maybeSingle();
-
-                if (existingUser) {
-                    showCustomAlert('❌ 密碼錯誤，請重新輸入！', '登入失敗');
+                // V4：登入失敗時不查詢 users 表確認 Email 是否存在，避免洩漏註冊狀態。
+                // 第一次失敗先顯示新會員欄位；已註冊會員可檢查密碼或使用「忘記密碼」。
+                if (nameContainer.classList.contains('hidden')) {
+                    nameContainer.classList.remove('hidden');
+                    authBtn.innerText = "新會員註冊";
+                    showCustomAlert('登入未成功。若您已有帳號，請檢查密碼或使用「忘記密碼」；若是新會員，請填寫下方資料後再次按「新會員註冊」。', '登入 / 註冊');
                     return;
                 }
 
                 if (!nameInput) {
-                    showCustomAlert('✨ 偵測為新帳號，請務必填寫「團隊名稱 / 您的稱呼」來完成註冊！', '資料未填');
-                    nameContainer.classList.remove('hidden');
+                    showCustomAlert('新會員請填寫「團隊名稱 / 您的稱呼」後再完成註冊；已有帳號請檢查密碼或使用「忘記密碼」。', '資料未填');
                     return;
                 }
 
@@ -1466,7 +1446,6 @@
                 .insert([{ 
                     email: String(u.email), 
                     name: String(u.name), 
-                    password: "SUPABASE_SECURE_AUTH", 
                     role: String(u.role),
                     services: String(services),
                     portfolio: String(portfolio),
@@ -1537,7 +1516,6 @@
 
         function updateBroadcastFromRanking(rankingList) {
             broadcastList = [];
-            // 👑 廣播列也過濾掉版主與案主
             const validBroadcastItems = rankingList.filter(item => 
                 item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
                 (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
@@ -1572,7 +1550,7 @@
         async function openEditProfileModal() {
             const { data: user, error } = await supabaseClient
                 .from('users')
-                .select('*')
+                .select('id,email,name,role,services,portfolio,ig,fb,created_at')
                 .eq('email', currentUserEmail)
                 .maybeSingle();
 
@@ -1715,7 +1693,7 @@
         }
 
         async function fetchRatingsAndRanking() {
-            const { data: usersData } = await supabaseClient.from('users').select('*');
+            const { data: usersData } = await supabaseClient.from('users').select('id,email,name,role,services,portfolio,ig,fb,created_at');
             if (usersData) {
                 usersData.forEach(u => {
                     freelancerMap[u.email] = u;
@@ -1773,7 +1751,6 @@
             globalRankingList = rankingList;
             updateBroadcastFromRanking(rankingList);
 
-            // 👑 關鍵過濾：在左側口碑排行榜中排除版主信箱與身分為「發案者」的帳號
             const validRankingList = rankingList.filter(item => 
                 item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
                 (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
@@ -1873,7 +1850,7 @@
 
             if (userProfile.fb && userProfile.fb.trim() !== "") {
                 fbBtn.href = userProfile.fb;
-                fbBtn.classList.remove('hidden');
+                fbBtn.classList.add('hidden');
             } else {
                 fbBtn.classList.add('hidden');
             }
