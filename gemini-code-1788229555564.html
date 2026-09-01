@@ -680,7 +680,7 @@
             </h3>
             <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 leading-relaxed space-y-2">
                 <p><b>貼心提醒：</b>點擊下方按鈕後，系統會<b>自動將您的應徵留言送至案主的發案管理後台</b>，並為您開啟 Gmail 寄信！</p>
-                <p><b>手機版用戶：</b>如果是用手機版本，請按下按鈕，系統將自動開啟郵件 App 手動寄出資訊！</p>
+                <p><b>手機版用戶：</b>如果是用手機版本，請按下按鈕，系統將自動開啟 Gmail App 並帶入所有應徵資訊！</p>
             </div>
 
             <div>
@@ -691,9 +691,9 @@
             <input type="hidden" id="notice-target-email">
 
             <div class="space-y-2 pt-1">
-                <!-- 🎯 手機版改為 mailto 直接呼叫郵件 App 帶入資料 -->
+                <!-- 🎯 手機版改為透過 mailto 自動開啟郵件 App 帶入資訊 -->
                 <button onclick="proceedMailtoOpenWithComment()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2 text-center px-2">
-                    ✉️ 一鍵開啟郵件 App 寄信並送出應徵 (手機版專用)
+                    ✉️ 開啟手機 Gmail App 寄信並送出應徵 (手機版專用)
                 </button>
                 <button onclick="proceedGmailOpenWithComment()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm text-xs cursor-pointer flex items-center justify-center gap-2">
                     💻 繼續前往 Gmail 寄信並送出應徵 (電腦版專用)
@@ -2369,7 +2369,7 @@ ${rateLink}
             renderProjects();
         }
 
-        // 🎯 手機版專用：透過 mailto 直接開啟郵件 App 並自動帶入收件人、主旨與內文
+        // 🎯 手機版專用：透過 mailto 自動開啟手機郵件 App 並自動帶入
         async function proceedMailtoOpenWithComment() {
             await saveApplicationComment();
             const text = document.getElementById('notice-preview-text').value;
