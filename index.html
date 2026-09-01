@@ -843,6 +843,7 @@
 
         let isLoggedIn = false;
         let currentUserEmail = "";
+        let currentUserId = null;
         let currentUserName = "";
         let currentUserRole = "";
         let allProjects = [];
@@ -901,14 +902,13 @@
             if (session && session.user) {
                 const authEmail = session.user.email;
                 const { data: userData } = await supabaseClient
-                    .from('users')
-                    .select('id,email,name,role,services,portfolio,ig,fb,created_at')
-                    .eq('email', authEmail)
+                    .rpc('get_my_profile')
                     .maybeSingle();
 
                 if (userData) {
-                    currentUserEmail = userData.email;
-                    currentUserName = userData.name || userData.services || userData.email.split('@')[0];
+                    currentUserEmail = authEmail;
+                    currentUserId = userData.profile_id;
+                    currentUserName = userData.name || userData.services || authEmail.split('@')[0];
                     currentUserRole = userData.role || '攝影師/團隊';
                     proceedLoginSuccess();
                 }
@@ -924,17 +924,15 @@
             setupPresenceChannel();
 
             const urlParams = new URLSearchParams(window.location.search);
-            const rateEmail = urlParams.get('rate');
-            if (rateEmail) {
+            const rateUserId = parseInt(urlParams.get('rateUser') || '', 10);
+            const legacyRateEmail = urlParams.get('rate');
+            if (rateUserId || legacyRateEmail) {
                 if (!isLoggedIn) {
-                    showCustomAlert('⭐ 歡迎！點擊信件評價連結需要先登入會員，登入後將自動為您開啟評價系統並帶入接案者信箱。', '評價系統登入驗證');
-                    window.pendingRateEmail = rateEmail;
+                    showCustomAlert('⭐ 歡迎！點擊評價連結需要先登入會員，登入後將自動開啟評價系統。', '評價系統登入驗證');
+                    window.pendingRateUserId = rateUserId || null;
+                    window.pendingRateEmail = legacyRateEmail || null;
                 } else {
-                    setTimeout(() => {
-                        document.getElementById('rating-target-email').value = rateEmail;
-                        document.getElementById('ratingModal').classList.remove('hidden');
-                        showCustomAlert(`✨ 系統已自動帶入接案者信箱：\n${rateEmail}\n請為對方給予合作評價！`, '快速評價');
-                    }, 800);
+                    setTimeout(() => openPendingRatingTarget(rateUserId || null, legacyRateEmail || null), 800);
                 }
             }
         });
@@ -943,7 +941,7 @@
             const displayEl = document.getElementById('announcement-display-text');
             const { data, error } = await supabaseClient
                 .from('announcements')
-                .select('*')
+                .select('id,content,created_at')
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
@@ -1050,7 +1048,7 @@
             const chatBox = document.getElementById('chat-messages-box');
             const { data: messages, error } = await supabaseClient
                 .from('global_chat')
-                .select('*')
+                .select('id,user_id,user_name,user_role,message,created_at')
                 .order('created_at', { ascending: false })
                 .limit(30);
 
@@ -1072,8 +1070,8 @@
             chatBox.innerHTML = '';
             messages.forEach(m => {
                 const timeStr = new Date(m.created_at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const isMe = m.user_email === currentUserEmail;
-                const isAdmin = m.user_email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                const isMe = Number(m.user_id) === Number(currentUserId);
+                const isAdmin = m.user_role === '官方版主';
                 
                 let roleBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold">${isAdmin ? '👑 官方版主' : (m.user_role || '會員')}</span>`;
 
@@ -1081,7 +1079,7 @@
                 msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5`;
                 msgDiv.innerHTML = `
                     <div class="flex items-center gap-1.5 text-[11px] text-gray-500 px-1">
-                        <span onclick="tryOpenChatUserProfile('${escapeHtml(m.user_email)}', '${escapeHtml(m.user_name)}')" class="font-bold text-gray-800 hover:text-amber-600 underline cursor-pointer">${escapeHtml(m.user_name)}</span>
+                        <span onclick="tryOpenChatUserProfile(${Number(m.user_id) || 0}, '${escapeHtml(m.user_name)}')" class="font-bold text-gray-800 hover:text-amber-600 underline cursor-pointer">${escapeHtml(m.user_name)}</span>
                         ${roleBadge}
                         <span class="text-[10px] text-gray-400">${timeStr}</span>
                     </div>
@@ -1094,13 +1092,13 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function tryOpenChatUserProfile(email, name) {
+        function tryOpenChatUserProfile(userId, name) {
             if (!isLoggedIn) {
                 showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號，才可查看用戶個人介紹與評價。', '會員限定');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-            openDetailModal(email, name);
+            openDetailModal(Number(userId), name);
         }
 
         async function sendChatMessage() {
@@ -1113,19 +1111,9 @@
             const text = input.value.trim();
             if (!text) return;
 
-            const isAdmin = currentUserEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-            const roleName = isAdmin ? '官方版主' : currentUserRole;
-
             const { error } = await supabaseClient
                 .from('global_chat')
-                .insert([
-                    {
-                        user_email: currentUserEmail,
-                        user_name: currentUserName,
-                        user_role: roleName,
-                        message: text
-                    }
-                ]);
+                .insert([{ message: text }]);
 
             if (error) {
                 showCustomAlert('發送訊息失敗：' + error.message, '系統錯誤');
@@ -1154,9 +1142,14 @@
         }
 
         async function fetchCommentsAndRefresh() {
+            if (!isLoggedIn) {
+                globalCommentsData = [];
+                renderProjects();
+                return;
+            }
             const { data: comments } = await supabaseClient
                 .from('project_comments')
-                .select('*');
+                .select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at');
             globalCommentsData = comments || [];
             renderProjects();
             updateMyProjectsBadge();
@@ -1196,9 +1189,7 @@
             }
 
             const { data: user, error } = await supabaseClient
-                .from('users')
-                .select('id,email,name,role,services,portfolio,ig,fb,created_at')
-                .eq('email', currentUserEmail)
+                .rpc('get_my_profile')
                 .maybeSingle();
 
             if (user && user.services) {
@@ -1264,8 +1255,7 @@
             container.innerHTML = '';
 
             const validPhotographers = globalRankingList.filter(item => 
-                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
-                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+                item.role !== 'admin' && item.role !== '官方' && item.role !== '官方版主' && item.role !== '發案者'
             );
 
             if (!validPhotographers || validPhotographers.length === 0) {
@@ -1278,14 +1268,14 @@
                     const row = document.createElement('div');
                     row.className = "p-3 bg-gray-50 hover:bg-amber-50 rounded-xl border border-gray-200 text-xs flex justify-between items-center cursor-pointer transition";
                     row.onclick = () => {
-                        openDetailModal(item.email, item.name);
+                        openDetailModal(item.userId, item.name);
                     };
                     row.innerHTML = `
                         <div class="flex items-center gap-3">
                             <span class="font-bold text-gray-500 w-6">#${index + 1}</span>
                             <div>
                                 <p class="font-bold text-gray-900 text-sm hover:text-amber-600 underline">${escapeHtml(item.name)}</p>
-                                <p class="text-[11px] text-gray-400">信箱：${maskEmail(item.email)}</p>
+                                <p class="text-[11px] text-gray-400">信箱：${escapeHtml(item.emailMasked || '保密中')}</p>
                             </div>
                         </div>
                         <div class="text-right">
@@ -1357,12 +1347,11 @@
                     }
 
                     const { data: existingUser } = await supabaseClient
-                        .from('users')
-                        .select('id,email,name,role,services,portfolio,ig,fb,created_at')
-                        .eq('email', emailInput)
+                        .rpc('get_my_profile')
                         .maybeSingle();
 
-                    currentUserEmail = emailInput;
+                    currentUserEmail = authData.user?.email || emailInput;
+                    currentUserId = existingUser?.profile_id || null;
                     currentUserName = (existingUser && existingUser.name) ? existingUser.name : ((existingUser && existingUser.services) ? existingUser.services : emailInput.split('@')[0]);
                     currentUserRole = (existingUser && existingUser.role) ? existingUser.role : '攝影師/團隊';
 
@@ -1441,9 +1430,10 @@
                 return;
             }
 
-            const { error: insertError } = await supabaseClient
+            const { data: newProfile, error: insertError } = await supabaseClient
                 .from('users')
                 .insert([{ 
+                    auth_user_id: signUpData.user.id,
                     email: String(u.email), 
                     name: String(u.name), 
                     role: String(u.role),
@@ -1451,7 +1441,9 @@
                     portfolio: String(portfolio),
                     ig: String(ig),
                     fb: String(fb)
-                }]);
+                }])
+                .select('id')
+                .single();
 
             if (insertError) {
                 console.error("寫入 users 資料表提示:", insertError.message);
@@ -1464,6 +1456,7 @@
             }
 
             currentUserEmail = u.email;
+            currentUserId = newProfile?.id || null;
             currentUserName = u.name;
             currentUserRole = u.role;
 
@@ -1509,22 +1502,19 @@
             fetchRatingsAndRanking();
             updateMyProjectsBadge();
 
-            if (window.pendingRateEmail) {
-                const targetToRate = window.pendingRateEmail;
+            if (window.pendingRateUserId || window.pendingRateEmail) {
+                const pendingId = window.pendingRateUserId || null;
+                const pendingEmail = window.pendingRateEmail || null;
+                window.pendingRateUserId = null;
                 window.pendingRateEmail = null;
-                setTimeout(() => {
-                    document.getElementById('rating-target-email').value = targetToRate;
-                    document.getElementById('ratingModal').classList.remove('hidden');
-                    showCustomAlert(`✨ 登入成功！已自動帶入接案者信箱：\n${targetToRate}\n請為對方給予合作評價！`, '快速評價');
-                }, 800);
+                setTimeout(() => openPendingRatingTarget(pendingId, pendingEmail), 800);
             }
         }
 
         function updateBroadcastFromRanking(rankingList) {
             broadcastList = [];
             const validBroadcastItems = rankingList.filter(item => 
-                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
-                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+                item.role !== 'admin' && item.role !== '官方' && item.role !== '官方版主' && item.role !== '發案者'
             );
 
             if (validBroadcastItems && validBroadcastItems.length > 0) {
@@ -1555,9 +1545,7 @@
 
         async function openEditProfileModal() {
             const { data: user, error } = await supabaseClient
-                .from('users')
-                .select('id,email,name,role,services,portfolio,ig,fb,created_at')
-                .eq('email', currentUserEmail)
+                .rpc('get_my_profile')
                 .maybeSingle();
 
             if (user) {
@@ -1605,7 +1593,7 @@
             const { error } = await supabaseClient
                 .from('users')
                 .update(updateData)
-                .eq('email', currentUserEmail);
+                .eq('id', currentUserId);
 
             if (error) {
                 showCustomAlert('更新失敗：' + error.message, '更新錯誤');
@@ -1632,6 +1620,7 @@
             await supabaseClient.auth.signOut();
             isLoggedIn = false;
             currentUserEmail = "";
+            currentUserId = null;
             currentUserName = "";
             currentUserRole = "";
             document.getElementById('login-section').classList.remove('hidden');
@@ -1700,67 +1689,56 @@
         }
 
         async function fetchRatingsAndRanking() {
-            const { data: usersData } = await supabaseClient.from('users').select('id,email,name,role,services,portfolio,ig,fb,created_at');
+            const { data: usersData, error: usersError } = await supabaseClient.rpc('get_public_profiles');
+            freelancerMap = {};
             if (usersData) {
                 usersData.forEach(u => {
-                    freelancerMap[u.email] = u;
+                    freelancerMap[Number(u.profile_id)] = u;
                 });
             }
 
-            const { data: ratings, error } = await supabaseClient
-                .from('ratings')
-                .select('*');
-
+            const { data: ratings, error } = await supabaseClient.rpc('get_public_ratings');
             const rankingContainer = document.getElementById('ranking-container');
 
             let stats = {};
             if (usersData) {
                 usersData.forEach(u => {
-                    const email = u.email;
-                    const name = u.name || u.services || email.split('@')[0];
-                    stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
+                    const userId = Number(u.profile_id);
+                    const name = u.name || u.services || `會員 #${userId}`;
+                    stats[userId] = {
+                        userId, name, role: u.role || '', emailMasked: u.email_masked || '保密中',
+                        totalScore: 0, count: 0
+                    };
                 });
             }
 
-            if (ratings && ratings.length > 0) {
-                globalratingsData = ratings;
-                ratings.forEach(r => {
-                    const email = r.freelancer_email || '未知信箱';
-                    let name = r.freelancer_name;
-                    
-                    if (freelancerMap[email] && (freelancerMap[email].name || freelancerMap[email].services)) {
-                        name = freelancerMap[email].name || freelancerMap[email].services;
-                    } else if (!name || name === email) {
-                        name = email.split('@')[0];
-                    }
-
-                    if (!stats[email]) {
-                        stats[email] = { name: name, email: email, totalScore: 0, count: 0 };
-                    }
-                    stats[email].totalScore += Number(r.rating_score);
-                    stats[email].count += 1;
-                });
-            }
-
-            let rankingList = Object.keys(stats).map(email => {
-                const count = stats[email].count;
-                return {
-                    email: email,
-                    name: stats[email].name,
-                    avg: count > 0 ? (stats[email].totalScore / count).toFixed(1) : "尚無評價",
-                    numericAvg: count > 0 ? (stats[email].totalScore / count) : 0,
-                    count: count
-                };
+            globalratingsData = ratings || [];
+            globalratingsData.forEach(r => {
+                const userId = Number(r.freelancer_user_id);
+                if (!userId) return;
+                if (!stats[userId]) {
+                    stats[userId] = {
+                        userId,
+                        name: r.freelancer_name || `會員 #${userId}`,
+                        role: '', emailMasked: '保密中', totalScore: 0, count: 0
+                    };
+                }
+                stats[userId].totalScore += Number(r.rating_score);
+                stats[userId].count += 1;
             });
 
+            let rankingList = Object.values(stats).map(item => ({
+                ...item,
+                avg: item.count > 0 ? (item.totalScore / item.count).toFixed(1) : '尚無評價',
+                numericAvg: item.count > 0 ? item.totalScore / item.count : 0
+            }));
             rankingList.sort((a, b) => b.numericAvg - a.numericAvg || b.count - a.count);
 
             globalRankingList = rankingList;
             updateBroadcastFromRanking(rankingList);
 
-            const validRankingList = rankingList.filter(item => 
-                item.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && 
-                (!freelancerMap[item.email] || freelancerMap[item.email].role !== '發案者')
+            const validRankingList = rankingList.filter(item =>
+                !['admin','官方','官方版主','發案者'].includes(item.role)
             );
 
             if (validRankingList.length === 0) {
@@ -1780,7 +1758,7 @@
 
                 const rankItem = document.createElement('div');
                 rankItem.className = "flex items-center justify-between p-2.5 bg-gray-50 hover:bg-amber-50 rounded-lg border border-gray-100 text-xs cursor-pointer transition";
-                rankItem.onclick = () => openDetailModal(item.email, item.name);
+                rankItem.onclick = () => openDetailModal(item.userId, item.name);
                 rankItem.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-gray-700 w-5 text-center">${medal}</span>
@@ -1829,10 +1807,10 @@
             }).join('');
         }
 
-        function openDetailModal(email, name) {
+        function openDetailModal(userId, name) {
             document.getElementById('detail-modal-subtitle').innerText = `攝影師 / 團隊：${name}`;
             
-            const userProfile = freelancerMap[email] || {};
+            const userProfile = freelancerMap[Number(userId)] || {};
             const servicesContainer = document.getElementById('profile-services');
             const portfolioBtn = document.getElementById('profile-portfolio');
             const igBtn = document.getElementById('profile-ig');
@@ -1865,7 +1843,7 @@
             const listContainer = document.getElementById('detail-reviews-list');
             listContainer.innerHTML = '';
 
-            const userReviews = globalratingsData.filter(r => r.freelancer_email === email);
+            const userReviews = globalratingsData.filter(r => Number(r.freelancer_user_id) === Number(userId));
 
             if (userReviews.length === 0) {
                 listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">目前尚無詳細評價</p>';
@@ -1880,7 +1858,7 @@
                     item.innerHTML = `
                         <div class="flex justify-between items-center">
                             <span class="text-amber-500 font-bold">${stars} (${rev.rating_score}分)</span>
-                            <span class="text-[10px] text-gray-400">評價者: ${maskEmail(rev.rater_email)}</span>
+                            <span class="text-[10px] text-gray-400">評價者: ${escapeHtml(rev.rater_name || '會員')}</span>
                         </div>
                         <p class="text-gray-700 font-semibold mt-1">💬 "${escapeHtml(rev.comment)}"</p>
                     `;
@@ -1899,7 +1877,7 @@
             const val = selectElement.value;
             if (!val) return;
 
-            const userProfile = freelancerMap[currentUserEmail] || {};
+            const userProfile = freelancerMap[Number(currentUserId)] || {};
             const portfolioInput = document.getElementById('apply-portfolio');
 
             if (val === 'all') {
@@ -1923,7 +1901,28 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
+            window.ratingTargetUserId = null;
+            const input = document.getElementById('rating-target-email');
+            input.readOnly = false;
+            input.value = '';
+            input.placeholder = 'freelancer@example.com';
             document.getElementById('ratingModal').classList.remove('hidden');
+        }
+
+        function openPendingRatingTarget(userId, legacyEmail) {
+            const input = document.getElementById('rating-target-email');
+            if (userId) {
+                const profile = freelancerMap[Number(userId)];
+                window.ratingTargetUserId = Number(userId);
+                input.readOnly = true;
+                input.value = profile?.name ? `${profile.name}（安全識別）` : `會員 #${userId}（安全識別）`;
+            } else {
+                window.ratingTargetUserId = null;
+                input.readOnly = false;
+                input.value = legacyEmail || '';
+            }
+            document.getElementById('ratingModal').classList.remove('hidden');
+            showCustomAlert('✨ 已安全選取合作對象，請留下您的合作評價。', '快速評價');
         }
 
         function closeRatingModal() {
@@ -1946,39 +1945,47 @@
 
         async function submitRating() {
             const targetEmail = document.getElementById('rating-target-email').value.trim().toLowerCase();
-            const score = document.getElementById('selected-rating').value;
+            const score = parseInt(document.getElementById('selected-rating').value, 10);
             const comment = document.getElementById('rating-comment-select').value;
+            const targetUserId = Number(window.ratingTargetUserId || 0);
 
-            if (!targetEmail || !targetEmail.includes('@')) {
+            if (!targetUserId && (!targetEmail || !targetEmail.includes('@'))) {
                 showCustomAlert('請輸入正確的接案者 Email！', '格式錯誤');
                 return;
             }
-
-            if (targetEmail === currentUserEmail.toLowerCase()) {
-                showCustomAlert('⚠️ 哎呀！您不能給自己評分或留下評價喔！', '無法評分');
+            if (!score || score < 1 || score > 5) {
+                showCustomAlert('請選擇 1～5 星評分。', '評分未完成');
                 return;
             }
 
-            const targetName = (freelancerMap[targetEmail] && (freelancerMap[targetEmail].services || freelancerMap[targetEmail].name)) || targetEmail.split('@')[0];
+            let result;
+            if (targetUserId) {
+                result = await supabaseClient.rpc('submit_rating_by_user_id', {
+                    p_target_user_id: targetUserId,
+                    p_rating_score: score,
+                    p_comment: comment
+                });
+            } else {
+                if (targetEmail === currentUserEmail.toLowerCase()) {
+                    showCustomAlert('⚠️ 您不能給自己評分或留下評價。', '無法評分');
+                    return;
+                }
+                result = await supabaseClient.rpc('submit_rating_by_email', {
+                    p_target_email: targetEmail,
+                    p_rating_score: score,
+                    p_comment: comment
+                });
+            }
 
-            const { error } = await supabaseClient
-                .from('ratings')
-                .insert([
-                    { 
-                        freelancer_name: targetName,
-                        freelancer_email: targetEmail, 
-                        rater_email: currentUserEmail, 
-                        rating_score: parseInt(score), 
-                        comment: comment 
-                    }
-                ]);
-
-            if (error) {
-                showCustomAlert('送出評價失敗：' + error.message, '送出錯誤');
+            if (result.error) {
+                showCustomAlert('送出評價失敗：' + result.error.message, '送出錯誤');
                 return;
             }
 
-            document.getElementById('rating-target-email').value = '';
+            window.ratingTargetUserId = null;
+            const input = document.getElementById('rating-target-email');
+            input.value = '';
+            input.readOnly = false;
             closeRatingModal();
             showCustomAlert('感謝您的評價！排行榜已即時更新。', '成功');
             fetchRatingsAndRanking();
@@ -1988,22 +1995,21 @@
             const container = document.getElementById('projects-container');
             container.innerHTML = '<p class="text-sm text-gray-500 text-center py-6">正在從雲端載入最新案件...</p>';
 
-            const { data: projects, error } = await supabaseClient
-                .from('projects')
-                .select('*')
-                .order('created_at', { ascending: false });
-
+            const { data: projects, error } = await supabaseClient.rpc('get_public_projects');
             if (error) {
                 container.innerHTML = '<p class="text-sm text-red-500 text-center py-6">載入案件失敗：' + error.message + '</p>';
                 return;
             }
 
-            const { data: comments } = await supabaseClient
-                .from('project_comments')
-                .select('*');
-
-            globalCommentsData = comments || [];
             allProjects = projects || [];
+            if (isLoggedIn) {
+                const { data: comments } = await supabaseClient
+                    .from('project_comments')
+                    .select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at');
+                globalCommentsData = comments || [];
+            } else {
+                globalCommentsData = [];
+            }
             renderProjects();
             updateMyProjectsBadge();
         }
@@ -2058,12 +2064,10 @@
                     dateStr = dateObj.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
                 }
 
-                const masked = maskEmail(p.client_email);
-                const emailDisplay = `發案人：${masked}`;
+                const emailDisplay = `發案人：${escapeHtml(p.client_email_masked || '保密中')}`;
                 const isClosed = p.status === '已結案';
                 
-                const projectComments = globalCommentsData.filter(c => c.project_id === p.id);
-                const commentCount = projectComments.length;
+                const commentCount = Number(p.application_count || 0);
 
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-3";
@@ -2091,38 +2095,17 @@
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 flex-wrap gap-2">
                         <span>${emailDisplay}</span>
                         <div class="flex items-center gap-2">
-                            <button onclick="toggleCommentSection(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer">
-                                💬 展開查看應徵留言 (${commentCount})
-                            </button>
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-semibold">
+                                💬 已有 ${commentCount} 人應徵
+                            </span>
                             <button type="button" class="apply-trigger-btn bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
                                 data-id="${p.id}"
                                 data-title="${escapeHtml(p.title)}"
                                 data-category="${escapeHtml(p.category)}"
                                 data-budget="NT$ ${escapeHtml(p.budget)}"
-                                data-desc="${escapeHtml(p.description)}"
-                                data-email="${escapeHtml(p.client_email)}">
+                                data-desc="${escapeHtml(p.description)}">
                                 ${isClosed ? '🔒 案件已結案' : (isLoggedIn ? '立即接案應徵 🚀' : '🔒 登入後才可接案')}
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- 💬 展開式應徵留言列表 -->
-                    <div id="comment-section-${p.id}" class="hidden bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 mt-3">
-                        <h4 class="text-xs font-bold text-gray-800 border-b pb-1">💬 已收到的應徵留言記錄 (${commentCount})</h4>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            ${projectComments.length === 0 ? '<p class="text-xs text-gray-400 text-center py-2">目前尚無攝影師留言應徵。</p>' : 
-                                projectComments.map(c => `
-                                    <div class="bg-white p-2.5 rounded-lg border border-gray-200 text-xs space-y-1">
-                                        <div class="flex justify-between font-bold">
-                                            <span onclick="openDetailModal('${escapeHtml(c.freelancer_email)}', '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
-                                                📷 應徵者：${escapeHtml(c.freelancer_name)} (點擊查看評價)
-                                            </span>
-                                            <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
-                                        </div>
-                                        <p class="text-gray-700 whitespace-pre-line">${escapeHtml(c.message)}</p>
-                                    </div>
-                                `).join('')
-                            }
                         </div>
                     </div>
                 `;
@@ -2141,8 +2124,7 @@
                             applyBtn.dataset.title,
                             applyBtn.dataset.category,
                             applyBtn.dataset.budget,
-                            applyBtn.dataset.desc,
-                            applyBtn.dataset.email
+                            applyBtn.dataset.desc
                         );
                     };
                 }
@@ -2167,7 +2149,7 @@
             const { data: myProjects } = await supabaseClient
                 .from('projects')
                 .select('id')
-                .eq('client_email', currentUserEmail);
+                .eq('client_user_id', currentUserId);
 
             if (!myProjects || myProjects.length === 0) {
                 document.getElementById('my-projects-badge').classList.add('hidden');
@@ -2178,7 +2160,7 @@
 
             const { data: unreadComments } = await supabaseClient
                 .from('project_comments')
-                .select('*')
+                .select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at')
                 .in('project_id', projectIds)
                 .eq('is_read', false);
 
@@ -2203,8 +2185,8 @@
 
             const { data: myProjects, error } = await supabaseClient
                 .from('projects')
-                .select('*')
-                .eq('client_email', currentUserEmail)
+                .select('id,title,category,budget,shoot_time,shoot_location,description,client_user_id,status,created_at')
+                .eq('client_user_id', currentUserId)
                 .order('created_at', { ascending: false });
 
             if (error || !myProjects || myProjects.length === 0) {
@@ -2213,6 +2195,12 @@
             }
 
             const projectIds = myProjects.map(p => p.id);
+            const { data: myComments } = await supabaseClient
+                .from('project_comments')
+                .select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at')
+                .in('project_id', projectIds);
+            globalCommentsData = myComments || [];
+
             await supabaseClient
                 .from('project_comments')
                 .update({ is_read: true })
@@ -2236,13 +2224,13 @@
                     commentsHtml = projectComments.map(c => `
                         <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-1">
                             <div class="flex justify-between font-bold">
-                                <span onclick="openDetailModal('${escapeHtml(c.freelancer_email)}', '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
+                                <span onclick="openDetailModal(${Number(c.freelancer_user_id) || 0}, '${escapeHtml(c.freelancer_name)}')" class="text-amber-700 hover:text-amber-900 underline cursor-pointer">
                                     📷 應徵者：${escapeHtml(c.freelancer_name)} (點擊查看評價)
                                 </span>
                                 <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
                             </div>
                             <p class="text-gray-700 whitespace-pre-line mt-1">💬 "${escapeHtml(c.message)}"</p>
-                            <p class="text-[10px] text-gray-400">信箱：${escapeHtml(c.freelancer_email)} | 聯絡方式：${escapeHtml(c.freelancer_contact)}</p>
+                            <p class="text-[10px] text-gray-400">聯絡方式：${escapeHtml(c.freelancer_contact)}</p>
                         </div>
                     `).join('');
                 }
@@ -2423,7 +2411,6 @@
                         shoot_time: time,
                         shoot_location: location,
                         description: desc, 
-                        client_email: currentUserEmail,
                         status: '招募中'
                     }
                 ]);
@@ -2444,10 +2431,18 @@
             fetchProjects();
         }
 
-        function tryApply(projectId, title, category, budget, desc, email) {
+        async function tryApply(projectId, title, category, budget, desc) {
             if (!isLoggedIn) {
                 showCustomAlert('⚠️ 這是會員限定功能！請先至左側會員中心登入帳號。', '會員限定');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            const { data: email, error } = await supabaseClient.rpc('get_project_contact', {
+                p_project_id: parseInt(projectId, 10)
+            });
+            if (error || !email) {
+                showCustomAlert('目前無法取得此案件的聯絡方式，可能已結案或案件不存在。', '無法應徵');
                 return;
             }
 
@@ -2457,13 +2452,12 @@
             document.getElementById('target-desc').value = desc;
             document.getElementById('target-email').value = email;
             document.getElementById('display-target-email').value = email;
-            
+
             if (currentUserName) {
                 document.getElementById('apply-name').value = currentUserName;
             }
-            
+
             document.getElementById('apply-comment').value = "應徵信件已寄出 如果找不到請在垃圾郵件尋找 or 點開我的個人資料 使用IG or fb 聯繫";
-            
             document.getElementById('apply-modal-subtitle').innerText = `應徵項目：${title} (${budget})`;
             document.getElementById('applyModal').classList.remove('hidden');
         }
@@ -2493,7 +2487,7 @@
             handleCheckboxCopyAndUnlock();
 
             const currentBaseUrl = window.location.href.split('?')[0];
-            const rateLink = `${currentBaseUrl}?rate=${encodeURIComponent(currentUserEmail)}`;
+            const rateLink = `${currentBaseUrl}?rateUser=${encodeURIComponent(currentUserId)}`;
 
             const formattedText = 
 `發案者 Email: ${clientEmail}
@@ -2540,15 +2534,13 @@ ${rateLink}
                 .insert([
                     {
                         project_id: parseInt(projectId),
-                        freelancer_email: currentUserEmail,
-                        freelancer_name: name,
                         freelancer_contact: contact,
                         message: comment,
                         is_read: false
                     }
                 ]);
 
-            const { data: comments } = await supabaseClient.from('project_comments').select('*');
+            const { data: comments } = await supabaseClient.from('project_comments').select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at');
             globalCommentsData = comments || [];
             renderProjects();
         }
