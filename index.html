@@ -917,6 +917,7 @@
             fetchProjects();
             fetchRatingsAndRanking();
             setupRealtimeSubscription();
+            setupProjectsRealtime();
             setupChatRealtime();
             fetchChatMessages();
             fetchAnnouncement();
@@ -1139,6 +1140,32 @@
                     fetchCommentsAndRefresh();
                 })
                 .subscribe();
+        }
+
+        // 📡 案件大廳即時同步：新增 / 編輯 / 結案 / 刪除後，自動重新讀取公開 RPC。
+        // 不直接使用 Realtime payload 顯示案件，避免把資料表中的非公開欄位帶進前端。
+        let projectsRealtimeRefreshTimer = null;
+
+        function setupProjectsRealtime() {
+            supabaseClient
+                .channel('public:projects-live')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'projects' },
+                    () => {
+                        if (projectsRealtimeRefreshTimer) {
+                            clearTimeout(projectsRealtimeRefreshTimer);
+                        }
+                        projectsRealtimeRefreshTimer = setTimeout(() => {
+                            fetchProjects();
+                        }, 250);
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'CHANNEL_ERROR') {
+                        console.warn('projects Realtime channel 發生錯誤');
+                    }
+                });
         }
 
         async function fetchCommentsAndRefresh() {
