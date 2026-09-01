@@ -372,52 +372,6 @@
         </div>
     </div>
 
-    <!-- 🔒 結案時強制評價彈窗 -->
-    <div id="closeProjectRatingModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[999] px-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
-            <button onclick="closeCloseProjectRatingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">&times;</button>
-            <h3 class="text-xl font-bold text-gray-900 mb-1">🔒 案件結案與攝影師評價</h3>
-            <p id="close-project-subtitle" class="text-xs text-amber-600 font-bold mb-4"></p>
-            
-            <input type="hidden" id="closing-project-id">
-
-            <div class="space-y-3 text-left">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">合作的攝影師/團隊 Email <span class="text-red-500">*</span></label>
-                    <input type="email" id="closing-freelancer-email" placeholder="freelancer@example.com" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">評分星等</label>
-                    <div id="closing-star-container" class="flex gap-2 text-2xl cursor-pointer">
-                        <span onclick="setClosingRating(1)" class="closing-star text-amber-400">★</span>
-                        <span onclick="setClosingRating(2)" class="closing-star text-amber-400">★</span>
-                        <span onclick="setClosingRating(3)" class="closing-star text-amber-400">★</span>
-                        <span onclick="setClosingRating(4)" class="closing-star text-amber-400">★</span>
-                        <span onclick="setClosingRating(5)" class="closing-star text-amber-400">★</span>
-                    </div>
-                    <input type="hidden" id="closing-selected-rating" value="5">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">評價內容</label>
-                    <select id="closing-comment-select" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
-                        <option value="效率快速">⚡ 效率快速</option>
-                        <option value="作品很滿意" selected>🎨 作品很滿意</option>
-                        <option value="專業團隊">🏆 專業團隊</option>
-                        <option value="服務一般">👍 服務一般</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button onclick="closeCloseProjectRatingModal()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl font-semibold transition cursor-pointer text-xs">
-                        🔙 返回
-                    </button>
-                    <button onclick="submitProjectCloseAndRating()" class="w-2/3 bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold transition shadow-sm cursor-pointer">
-                        確認送出評價並結案 🔒
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 🎁 新註冊會員專用：填寫完整個人檔案彈窗 -->
     <div id="registerProfileModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -2421,67 +2375,7 @@
             fetchProjects();
         }
 
-        function openCloseProjectModal(projectId, projectTitle) {
-            document.getElementById('closing-project-id').value = projectId;
-            document.getElementById('close-project-subtitle').innerText = `結案案件：${projectTitle}`;
-            document.getElementById('closing-freelancer-email').value = '';
-            closeMyProjectsModal();
-            document.getElementById('closeProjectRatingModal').classList.remove('hidden');
-        }
-
-        function closeCloseProjectRatingModal() {
-            document.getElementById('closeProjectRatingModal').classList.add('hidden');
-            openMyProjectsModal();
-        }
-
-        function setClosingRating(score) {
-            document.getElementById('closing-selected-rating').value = score;
-            const stars = document.querySelectorAll('.closing-star');
-            stars.forEach((star, index) => {
-                if (index < score) {
-                    star.className = "closing-star text-amber-400";
-                    star.innerText = "★";
-                } else {
-                    star.className = "closing-star text-gray-300";
-                    star.innerText = "☆";
-                }
-            });
-        }
-
-        async function submitProjectCloseAndRating() {
-            const projectId = document.getElementById('closing-project-id').value;
-            const targetEmail = document.getElementById('closing-freelancer-email').value.trim().toLowerCase();
-            const score = document.getElementById('closing-selected-rating').value;
-            const comment = document.getElementById('closing-comment-select').value;
-
-            if (!targetEmail || !targetEmail.includes('@')) {
-                showCustomAlert('請輸入正確的合作攝影師/團隊 Email！', '格式錯誤');
-                return;
-            }
-
-            if (targetEmail === currentUserEmail.toLowerCase()) {
-                showCustomAlert('⚠️ 哎呀！您不能給自己評分或留下評價喔！', '無法評分');
-                return;
-            }
-
-            const targetName = (freelancerMap[targetEmail] && (freelancerMap[targetEmail].services || freelancerMap[targetEmail].name)) || targetEmail.split('@')[0];
-            const { error: ratingError } = await supabaseClient
-                .from('ratings')
-                .insert([
-                    { 
-                        freelancer_name: targetName,
-                        freelancer_email: targetEmail, 
-                        rater_email: currentUserEmail, 
-                        rating_score: parseInt(score), 
-                        comment: comment 
-                    }
-                ]);
-
-            if (ratingError) {
-                showCustomAlert('送出評價失敗：' + ratingError.message, '送出錯誤');
-                return;
-            }
-
+        async function openCloseProjectModal(projectId, projectTitle) {
             const { error: projectError } = await supabaseClient
                 .from('projects')
                 .update({ status: '已結案' })
@@ -2492,11 +2386,9 @@
                 return;
             }
 
-            document.getElementById('closeProjectRatingModal').classList.add('hidden');
-            showCustomAlert('🎉 評價成功送出，且案件已正式結案！', '結案成功');
-            
+            closeMyProjectsModal();
+            showCustomAlert(`🎉「${projectTitle}」已正式結案！`, '結案成功');
             fetchProjects();
-            fetchRatingsAndRanking();
         }
 
         function openPostModal() {
