@@ -2194,12 +2194,24 @@
                 return;
             }
 
-            const projectIds = myProjects.map(p => p.id);
-            const { data: myComments } = await supabaseClient
+            const projectIds = myProjects.map(p => Number(p.id)).filter(Number.isFinite);
+            const { data: myComments, error: myCommentsError } = await supabaseClient
                 .from('project_comments')
                 .select('id,project_id,freelancer_user_id,freelancer_name,freelancer_contact,message,is_read,created_at')
                 .in('project_id', projectIds);
-            globalCommentsData = myComments || [];
+
+            if (myCommentsError) {
+                console.error('載入案件應徵留言失敗：', myCommentsError);
+                showCustomAlert('目前無法載入應徵留言：' + myCommentsError.message, '載入失敗');
+            }
+
+            // Supabase 的數字欄位在不同回傳情境下可能是 number 或字串。
+            // 統一轉成 Number，避免明明已取得留言，前端卻因型別不同而比對不到案件。
+            globalCommentsData = (myComments || []).map(c => ({
+                ...c,
+                project_id: Number(c.project_id),
+                freelancer_user_id: c.freelancer_user_id == null ? null : Number(c.freelancer_user_id)
+            }));
 
             await supabaseClient
                 .from('project_comments')
@@ -2212,7 +2224,7 @@
             container.innerHTML = '';
             myProjects.forEach(p => {
                 const isClosed = p.status === '已結案';
-                const projectComments = globalCommentsData.filter(c => c.project_id === p.id);
+                const projectComments = globalCommentsData.filter(c => Number(c.project_id) === Number(p.id));
 
                 const item = document.createElement('div');
                 item.className = "p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-3";
