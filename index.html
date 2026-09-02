@@ -2115,6 +2115,56 @@
             return maskedName + '@' + domain;
         }
 
+        function linkifyProjectText(text) {
+            const raw = String(text || '');
+            const urlRegex = /((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+            let result = '';
+            let lastIndex = 0;
+            let match;
+
+            while ((match = urlRegex.exec(raw)) !== null) {
+                result += escapeHtml(raw.slice(lastIndex, match.index));
+
+                let displayUrl = match[0];
+                let trailing = '';
+                while (/[.,!?，。！？；;：:）)\]]$/.test(displayUrl)) {
+                    trailing = displayUrl.slice(-1) + trailing;
+                    displayUrl = displayUrl.slice(0, -1);
+                }
+
+                const href = displayUrl.toLowerCase().startsWith('www.')
+                    ? 'https://' + displayUrl
+                    : displayUrl;
+
+                result += `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all">${escapeHtml(displayUrl)}</a>${escapeHtml(trailing)}`;
+                lastIndex = match.index + match[0].length;
+            }
+
+            result += escapeHtml(raw.slice(lastIndex));
+            return result.replace(/\n/g, '<br>');
+        }
+
+        function toggleProjectDescription(button) {
+            const wrapper = button.previousElementSibling;
+            if (!wrapper) return;
+
+            const isExpanded = wrapper.dataset.expanded === 'true';
+            wrapper.dataset.expanded = isExpanded ? 'false' : 'true';
+
+            if (isExpanded) {
+                wrapper.style.display = '-webkit-box';
+                wrapper.style.webkitBoxOrient = 'vertical';
+                wrapper.style.webkitLineClamp = '3';
+                wrapper.style.overflow = 'hidden';
+                button.textContent = '展開全文 ▾';
+            } else {
+                wrapper.style.display = 'block';
+                wrapper.style.webkitLineClamp = 'unset';
+                wrapper.style.overflow = 'visible';
+                button.textContent = '收起全文 ▴';
+            }
+        }
+
         function renderProjects() {
             const container = document.getElementById('projects-container');
             
@@ -2150,6 +2200,9 @@
                 const isClosed = p.status === '已結案';
                 
                 const commentCount = Number(p.application_count || 0);
+                const projectDescription = String(p.description || '');
+                const descriptionIsLong = projectDescription.length > 140 || projectDescription.split('\n').length > 3;
+                const descriptionHtml = linkifyProjectText(projectDescription);
 
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition space-y-3";
@@ -2172,7 +2225,18 @@
                         <p>📍 <b>拍攝地點：</b>${escapeHtml(p.shoot_location || '未填寫')}</p>
                     </div>
 
-                    <p class="text-gray-600 text-sm">${escapeHtml(p.description)}</p>
+                    <div>
+                        <div class="project-description text-gray-600 text-sm leading-6 break-words"
+                             data-expanded="false"
+                             style="${descriptionIsLong ? 'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;' : 'white-space:normal;'}">${descriptionHtml}</div>
+                        ${descriptionIsLong ? `
+                            <button type="button"
+                                    onclick="toggleProjectDescription(this)"
+                                    class="mt-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800">
+                                展開全文 ▾
+                            </button>
+                        ` : ''}
+                    </div>
                     
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 flex-wrap gap-2">
                         <span>${emailDisplay}</span>
