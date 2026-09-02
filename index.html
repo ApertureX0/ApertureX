@@ -348,7 +348,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別 <span class="text-red-500">*</span></label>
-                        <select id="edit-project-category" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                        <select id="edit-project-category" onchange="updateEditDateRequirement()" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
                             <option value="商業攝影">商業攝影</option>
                             <option value="活動紀錄">活動紀錄</option>
                             <option value="婚禮紀錄">婚禮紀錄</option>
@@ -368,7 +368,11 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">
+                            拍攝日期
+                            <span id="edit-time-required-mark" class="text-red-500">*</span>
+                            <span id="edit-time-optional-tip" class="hidden text-gray-400 font-normal">（服務刊登可留空）</span>
+                        </label>
                         <input type="text" id="edit-project-time" placeholder="例如: 2026/09/12" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
@@ -502,7 +506,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝類別 <span class="text-red-500">*</span></label>
-                        <select id="post-category" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                        <select id="post-category" onchange="updatePostDateRequirement()" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg bg-white">
                             <option value="商業攝影">商業攝影</option>
                             <option value="活動紀錄">活動紀錄</option>
                             <option value="婚禮紀錄">婚禮紀錄</option>
@@ -522,7 +526,11 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">拍攝日期 <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">
+                            拍攝日期
+                            <span id="post-time-required-mark" class="text-red-500">*</span>
+                            <span id="post-time-optional-tip" class="hidden text-gray-400 font-normal">（服務刊登可留空）</span>
+                        </label>
                         <input type="text" id="post-time" placeholder="例如: 2026/09/12" class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
@@ -2410,6 +2418,7 @@
             document.getElementById('edit-project-time').value = time;
             document.getElementById('edit-project-location').value = location;
             document.getElementById('edit-project-desc').value = description;
+            updateEditDateRequirement();
 
             document.getElementById('myProjectsModal').classList.add('hidden');
             document.getElementById('editProjectModal').classList.remove('hidden');
@@ -2418,6 +2427,21 @@
         function closeEditProjectModal() {
             document.getElementById('editProjectModal').classList.add('hidden');
             openMyProjectsModal();
+        }
+
+        function updateEditDateRequirement() {
+            const category = document.getElementById('edit-project-category')?.value;
+            const isServiceListing = category === '服務刊登';
+            const mark = document.getElementById('edit-time-required-mark');
+            const tip = document.getElementById('edit-time-optional-tip');
+            const input = document.getElementById('edit-project-time');
+
+            if (mark) mark.classList.toggle('hidden', isServiceListing);
+            if (tip) tip.classList.toggle('hidden', !isServiceListing);
+
+            if (input) {
+                input.placeholder = isServiceListing ? '服務刊登可留空' : '例如: 2026/09/12';
+            }
         }
 
         async function submitEditProject() {
@@ -2429,8 +2453,13 @@
             const location = document.getElementById('edit-project-location').value.trim();
             const description = document.getElementById('edit-project-desc').value.trim();
 
-            if (!title || !budget || !time || !location || !description) {
-                showCustomAlert('⚠️ 請完整填寫所有案件欄位（包含拍攝日期與拍攝地點），才可儲存！', '欄位未填');
+            const isServiceListing = category === '服務刊登';
+
+            if (!title || !budget || !location || !description || (!isServiceListing && !time)) {
+                const missingMessage = isServiceListing
+                    ? '⚠️ 請完整填寫案件標題、預算、地點與詳細說明；「服務刊登」的日期可以留空。'
+                    : '⚠️ 請完整填寫所有案件欄位（包含拍攝日期與拍攝地點），才可儲存！';
+                showCustomAlert(missingMessage, '欄位未填');
                 return;
             }
 
@@ -2471,8 +2500,24 @@
                 return;
             }
             document.getElementById('postModal').classList.remove('hidden');
+            updatePostDateRequirement();
         }
         function closePostModal() { document.getElementById('postModal').classList.add('hidden'); }
+
+        function updatePostDateRequirement() {
+            const category = document.getElementById('post-category')?.value;
+            const isServiceListing = category === '服務刊登';
+            const mark = document.getElementById('post-time-required-mark');
+            const tip = document.getElementById('post-time-optional-tip');
+            const input = document.getElementById('post-time');
+
+            if (mark) mark.classList.toggle('hidden', isServiceListing);
+            if (tip) tip.classList.toggle('hidden', !isServiceListing);
+
+            if (input) {
+                input.placeholder = isServiceListing ? '服務刊登可留空' : '例如: 2026/09/12';
+            }
+        }
 
         async function submitNewProject() {
             const title = document.getElementById('post-title').value.trim();
@@ -2482,8 +2527,13 @@
             const location = document.getElementById('post-location').value.trim();
             const desc = document.getElementById('post-desc').value.trim();
 
-            if(!title || !budget || !time || !location || !desc) {
-                showCustomAlert('⚠️ 請完整填寫所有欄位（包含「拍攝日期」與「拍攝地點」），否則無法發布案件！', '欄位未填');
+            const isServiceListing = category === '服務刊登';
+
+            if(!title || !budget || !location || !desc || (!isServiceListing && !time)) {
+                const missingMessage = isServiceListing
+                    ? '⚠️ 請完整填寫案件標題、預算、地點與詳細說明；「服務刊登」的日期可以留空。'
+                    : '⚠️ 請完整填寫所有欄位（包含「拍攝日期」與「拍攝地點」），否則無法發布案件！';
+                showCustomAlert(missingMessage, '欄位未填');
                 return;
             }
 
