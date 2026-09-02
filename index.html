@@ -215,19 +215,43 @@
                 <span id="hall-status-tip" class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">請先登入以解鎖接案按鈕</span>
             </div>
 
-            <!-- 分類篩選按鈕列 -->
-            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-2 items-center">
-                <span class="text-xs font-bold text-gray-500 mr-1">🔍 類別篩選：</span>
-                <button onclick="filterCategory('全部', this)" class="filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">全部案件</button>
-                <button onclick="filterCategory('商業攝影', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">商業攝影</button>
-                <button onclick="filterCategory('活動紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">活動紀錄</button>
-                <button onclick="filterCategory('婚禮紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">婚禮紀錄</button>
-                <button onclick="filterCategory('人像寫真', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">人像寫真</button>
-                <button onclick="filterCategory('自媒體', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">自媒體</button>
-                <button onclick="filterCategory('找剪輯', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">找剪輯</button>
-                <button onclick="filterCategory('短影音', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">短影音</button>
-                <button onclick="filterCategory('平面設計', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">平面設計</button>
-                <button onclick="filterCategory('動畫製作+特效', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">動畫製作+特效</button>
+            <!-- 分類篩選：手機版改用下拉選單，桌機版保留按鈕 -->
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                <!-- 手機版 -->
+                <div class="sm:hidden">
+                    <label for="mobile-category-filter" class="block text-xs font-bold text-gray-500 mb-1.5">🔍 類別篩選</label>
+                    <select id="mobile-category-filter"
+                        onchange="filterCategoryFromSelect(this)"
+                        class="w-full text-sm px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-gray-800">
+                        <option value="全部">全部案件</option>
+                        <option value="商業攝影">商業攝影</option>
+                        <option value="活動紀錄">活動紀錄</option>
+                        <option value="婚禮紀錄">婚禮紀錄</option>
+                        <option value="人像寫真">人像寫真</option>
+                        <option value="自媒體">自媒體</option>
+                        <option value="找剪輯">找剪輯</option>
+                        <option value="短影音">短影音</option>
+                        <option value="平面設計">平面設計</option>
+                        <option value="動畫製作+特效">動畫製作+特效</option>
+                        <option value="服務刊登">服務刊登</option>
+                    </select>
+                </div>
+
+                <!-- 桌機版 -->
+                <div class="hidden sm:flex flex-wrap gap-2 items-center">
+                    <span class="text-xs font-bold text-gray-500 mr-1">🔍 類別篩選：</span>
+                    <button onclick="filterCategory('全部', this)" class="filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">全部案件</button>
+                    <button onclick="filterCategory('商業攝影', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">商業攝影</button>
+                    <button onclick="filterCategory('活動紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">活動紀錄</button>
+                    <button onclick="filterCategory('婚禮紀錄', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">婚禮紀錄</button>
+                    <button onclick="filterCategory('人像寫真', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">人像寫真</button>
+                    <button onclick="filterCategory('自媒體', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">自媒體</button>
+                    <button onclick="filterCategory('找剪輯', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">找剪輯</button>
+                    <button onclick="filterCategory('短影音', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">短影音</button>
+                    <button onclick="filterCategory('平面設計', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">平面設計</button>
+                    <button onclick="filterCategory('動畫製作+特效', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">動畫製作+特效</button>
+                    <button onclick="filterCategory('服務刊登', this)" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">服務刊登</button>
+                </div>
             </div>
 
             <div id="projects-container" class="space-y-4">
@@ -334,6 +358,7 @@
                             <option value="短影音">短影音</option>
                             <option value="平面設計">平面設計</option>
                             <option value="動畫製作+特效">動畫製作+特效</option>
+                            <option value="服務刊登">服務刊登</option>
                         </select>
                     </div>
                     <div>
@@ -487,6 +512,7 @@
                             <option value="短影音">短影音</option>
                             <option value="平面設計">平面設計</option>
                             <option value="動畫製作+特效">動畫製作+特效</option>
+                            <option value="服務刊登">服務刊登</option>
                         </select>
                     </div>
                     <div>
@@ -2041,15 +2067,35 @@
             updateMyProjectsBadge();
         }
 
-        function filterCategory(category, btnElement) {
+        function filterCategory(category, btnElement = null) {
             currentCategory = category;
 
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.className = "filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
             });
-            btnElement.className = "filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+
+            if (btnElement) {
+                btnElement.className = "filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+            } else {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    const label = btn.textContent.trim();
+                    const btnCategory = label === '全部案件' ? '全部' : label;
+                    if (btnCategory === category) {
+                        btn.className = "filter-btn bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+                    }
+                });
+            }
+
+            const mobileSelect = document.getElementById('mobile-category-filter');
+            if (mobileSelect && mobileSelect.value !== category) {
+                mobileSelect.value = category;
+            }
 
             renderProjects();
+        }
+
+        function filterCategoryFromSelect(selectElement) {
+            filterCategory(selectElement.value);
         }
 
         function maskEmail(email) {
@@ -2084,6 +2130,7 @@
                 if(p.category === "短影音") badgeColor = "bg-red-100 text-red-800";
                 if(p.category === "平面設計") badgeColor = "bg-teal-100 text-teal-800";
                 if(p.category === "動畫製作+特效") badgeColor = "bg-orange-100 text-orange-800";
+                if(p.category === "服務刊登") badgeColor = "bg-emerald-100 text-emerald-800";
 
                 let dateStr = "剛剛";
                 if (p.created_at) {
